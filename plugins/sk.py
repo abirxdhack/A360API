@@ -1,5 +1,5 @@
-# Copyright @ISmartCoder
-# Updates Channel: https://t.me/TheSmartDev
+#Copyright @ISmartCoder
+#Updates Channel t.me/TheSmartDev
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 import aiohttp
@@ -10,6 +10,7 @@ from datetime import datetime
 
 router = APIRouter(prefix="/sk")
 STRIPE_URL = "https://api.stripe.com/v1/account"
+BALANCE_URL = "https://api.stripe.com/v1/balance"
 
 async def verify_stripe_key(stripe_key: str):
     headers = {"Authorization": f"Bearer {stripe_key}"}
@@ -29,15 +30,39 @@ async def get_stripe_key_info(stripe_key: str):
                 if response.status != 200:
                     return None
                 data = await response.json()
-                return {
-                    "id": data.get("id", "N/A"),
+            async with aiohttp.ClientSession(headers=headers) as session:
+                async with session.get(BALANCE_URL, timeout=10) as balance_response:
+                    balance_data = await balance_response.json() if balance_response.status == 200 else {}
+            available_balance = balance_data.get("available", [{}])[0].get("amount", 0) / 100 if balance_data else 0
+            pending_balance = balance_data.get("pending", [{}])[0].get("amount", 0) / 100 if balance_data else 0
+            currency = balance_data.get("available", [{}])[0].get("currency", "N/A").upper() if balance_data else "N/A"
+            capabilities = data.get("capabilities", {})
+            return {
+                "account_info": {
+                    "status": "✅ Live" if data.get("charges_enabled") else "❌ Restricted",
+                    "account_id": data.get("id", "N/A"),
+                    "business_name": data.get("business_profile", {}).get("name", "N/A"),
                     "email": data.get("email", "N/A"),
+                    "phone": data.get("business_profile", {}).get("support_phone", "N/A"),
+                    "website": data.get("business_profile", {}).get("url", "N/A"),
                     "country": data.get("country", "N/A"),
-                    "business_name": data.get("business_name", "N/A"),
-                    "type": data.get("type", "N/A"),
-                    "payouts_enabled": data.get("payouts_enabled", "N/A"),
-                    "details_submitted": data.get("details_submitted", "N/A")
+                    "currency": data.get("default_currency", "N/A").upper(),
+                    "business_type": data.get("business_type", "N/A").capitalize(),
+                    "charges_enabled": "✅ Yes" if data.get("charges_enabled") else "❌ No",
+                    "payouts_enabled": "✅ Yes" if data.get("payouts_enabled") else "❌ No",
+                    "account_type": data.get("type", "N/A").capitalize(),
+                },
+                "capabilities": {
+                    "card_payments": "✅ Enabled" if capabilities.get("card_payments") == "active" else "❌ Disabled",
+                    "india_intl_payments": "✅ Enabled" if capabilities.get("india_international_payments") == "active" else "❌ Disabled",
+                    "transfers": "✅ Enabled" if capabilities.get("transfers") == "active" else "❌ Disabled"
+                },
+                "balance": {
+                    "available": f"{available_balance} {currency}",
+                    "pending": f"{pending_balance} {currency}",
+                    "live_mode": "✅ Yes" if balance_data.get("livemode") else "❌ No"
                 }
+            }
     except Exception as e:
         LOGGER.error(f"Error fetching Stripe key info: {str(e)}")
         return None
