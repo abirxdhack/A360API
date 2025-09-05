@@ -1,3 +1,5 @@
+#Copyright @ISmartCoder
+#Updates Channel @TheSmartDev 
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 import requests
@@ -5,9 +7,9 @@ import re
 import html
 from collections import OrderedDict
 from utils import LOGGER
-from config import YOUTUBE_API_KEY
 
 router = APIRouter(prefix="/yt")
+YOUTUBE_API_KEY = "AIzaSyClox4nsUjqMT7cqKhaz7asQGeWe5E-1gE"
 YOUTUBE_SEARCH_API_URL = "https://www.googleapis.com/youtube/v3/search"
 YOUTUBE_VIDEOS_API_URL = "https://www.googleapis.com/youtube/v3/videos"
 
@@ -66,6 +68,7 @@ def fetch_youtube_details(video_id):
             "title": html.unescape(snippet.get('title', 'N/A')),
             "channel": html.unescape(snippet.get('channelTitle', 'N/A')),
             "description": html.unescape(snippet.get('description', 'N/A')),
+            "tags": snippet.get('tags', []),
             "imageUrl": snippet.get('thumbnails', {}).get('high', {}).get('url', ''),
             "duration": parse_duration(content_details.get('duration', '')),
             "views": stats.get('viewCount', 'N/A'),
@@ -105,6 +108,7 @@ def fetch_youtube_search(query):
             result.append({
                 "title": html.unescape(snippet.get('title', 'N/A')),
                 "channel": html.unescape(snippet.get('channelTitle', 'N/A')),
+                "tags": video.get('snippet', {}).get('tags', []),
                 "imageUrl": snippet.get('thumbnails', {}).get('high', {}).get('url', ''),
                 "link": f"https://youtube.com/watch?v={video_id}",
                 "duration": parse_duration(content_details.get('duration', '')),
@@ -145,6 +149,7 @@ async def download(url: str = ""):
             "title": "Unavailable",
             "channel": "N/A",
             "description": "N/A",
+            "tags": [],
             "imageUrl": f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg",
             "duration": "N/A",
             "views": "N/A",
@@ -161,6 +166,7 @@ async def download(url: str = ""):
             ordered["title"] = html.unescape(data.get("title", youtube_data["title"]))
             ordered["channel"] = youtube_data["channel"]
             ordered["description"] = youtube_data["description"]
+            ordered["tags"] = youtube_data["tags"]
             ordered["thumbnail"] = data.get("thumbnail", youtube_data["imageUrl"])
             ordered["thumbnail_url"] = f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
             ordered["url"] = data.get("url", standard_url)
@@ -175,6 +181,7 @@ async def download(url: str = ""):
             ordered["title"] = youtube_data["title"]
             ordered["channel"] = youtube_data["channel"]
             ordered["description"] = youtube_data["description"]
+            ordered["tags"] = youtube_data["tags"]
             ordered["thumbnail"] = youtube_data["imageUrl"]
             ordered["thumbnail_url"] = f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
             ordered["url"] = standard_url
@@ -193,6 +200,7 @@ async def download(url: str = ""):
         ordered["title"] = youtube_data["title"]
         ordered["channel"] = youtube_data["channel"]
         ordered["description"] = youtube_data["description"]
+        ordered["tags"] = youtube_data["tags"]
         ordered["thumbnail"] = youtube_data["imageUrl"]
         ordered["thumbnail_url"] = f"https://img.youtube.com/vi/{video_id}/hqdefault.jpg"
         ordered["url"] = standard_url
