@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <meta name="description" content="A360 API - Report Issues: Help us improve by submitting bugs or feature requests.">
+    <meta name="keywords" content="A360 API, report issues, bug report, feature request, contact">
+    <meta name="author" content="Abir Arafat Chawdhury (@ISmartCoder)">
+    <title>A360API - Report Issues</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            color: #1f2937;
+            overflow-x: hidden;
+            overflow-y: auto;
+            margin: 0;
+            background: linear-gradient(135deg, #f9fafb, #d1d5db);
+            animation: bgAnimation 10s infinite ease-in-out;
+        }
+        @keyframes bgAnimation {
+            0% { background-position: 0% 0%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 0%; }
+        }
+        #three-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.5;
+            will-change: transform;
+        }
+        .section-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            padding: 0.75rem;
+            margin: 0.5rem auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            max-width: 95vw;
+        }
+        @media (min-width: 640px) {
+            .section-card {
+                padding: 1.5rem;
+                margin: 1rem auto;
+                max-width: 80vw;
+            }
+            .section-card:hover {
+                transform: translateY(-10px);
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            }
+        }
+        .logo {
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #1f2937;
+            box-shadow: 0 0 15px rgba(31, 41, 55, 0.4);
+            width: 24vw;
+            height: 24vw;
+            max-width: 100px;
+            max-height: 100px;
+            margin: 0 auto;
+        }
+        @media (min-width: 640px) {
+            .logo {
+                width: 32vw;
+                height: 32vw;
+                max-width: 140px;
+                max-height: 140px;
+            }
+            @media (min-width: 768px) {
+                .logo {
+                    max-width: 180px;
+                    max-height: 180px;
+                }
+            }
+        }
+        .glow {
+            font-family: 'Poppins', sans-serif;
+            text-shadow: 0 0 8px rgba(31, 41, 55, 0.6), 0 0 16px rgba(31, 41, 55, 0.4);
+        }
+        .stylish-text {
+            font-family: 'Poppins', sans-serif;
+            letter-spacing: 0.5px;
+            color: #1f2937;
+        }
+        .btn-glow {
+            background: linear-gradient(90deg, #1f2937, #4b5563);
+            color: #ffffff;
+            transition: all 0.3s ease;
+            padding: 0.5rem 1rem;
+            border-radius: 0.75rem;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 5px rgba(31, 41, 55, 0.3);
+        }
+        @media (min-width: 640px) {
+            .btn-glow {
+                padding: 0.75rem 1.5rem;
+                font-size: 1rem;
+            }
+            .btn-glow:hover {
+                box-shadow: 0 0 15px rgba(31, 41, 55, 0.6);
+                transform: scale(1.05);
+                background: linear-gradient(90deg, #111827, #374151);
+            }
+        }
+        .endpoint-card {
+            background: linear-gradient(135deg, #ffffff, #e5e7eb);
+            border: 1px solid #1f2937;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            max-width: 95vw;
+        }
+        @media (min-width: 640px) {
+            .endpoint-card {
+                padding: 1.25rem;
+                max-width: 80vw;
+            }
+            .endpoint-card:hover {
+                transform: scale(1.03);
+                box-shadow: 0 6px 15px rgba(31, 41, 55, 0.2);
+            }
+        }
+        .code-block {
+            background: #1f2937;
+            color: #f3f4f6;
+            font-family: 'Inter', sans-serif;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            font-size: 0.85rem;
+            line-height: 1.4;
+        }
+        @media (min-width: 640px) {
+            .code-block {
+                padding: 1rem;
+                font-size: 0.9rem;
+            }
+        }
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: #10b981;
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+        }
+        @media (min-width: 640px) {
+            .status-indicator {
+                font-size: 1rem;
+            }
+        }
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #10b981;
+            animation: pulse 2.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .project-card {
+            background: linear-gradient(135deg, #ffffff, #e5e7eb);
+            border: 1px solid #1f2937;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            text-align: center;
+            max-width: 95vw;
+        }
+        @media (min-width: 640px) {
+            .project-card {
+                padding: 1.25rem;
+                max-width: 80vw;
+            }
+            .project-card:hover {
+                transform: scale(1.03);
+                box-shadow: 0 6px 15px rgba(31, 41, 55, 0.2);
+            }
+        }
+        header {
+            padding: 1rem 0.5rem;
+            background: linear-gradient(135deg, #e0f7fa, #ffffff);
+            border-bottom: 2px solid #1f2937;
+        }
+        header .flex {
+            align-items: center;
+        }
+        header svg circle {
+            transition: transform 0.3s ease;
+        }
+        header svg path {
+            transition: stroke 0.3s ease;
+        }
+        header:hover svg circle {
+            transform: scale(1.1);
+        }
+        header:hover svg path {
+            stroke-width: 2.5;
+        }
+        .welcome-message {
+            max-width: 95vw;
+            margin-left: auto;
+            margin-right: auto;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            color: #1f2937;
+        }
+        @media (min-width: 640px) {
+            .welcome-message {
+                font-size: 1rem;
+                max-width: 80vw;
+                text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+        }
+        .welcome-message i {
+            font-style: italic;
+        }
+        .welcome-message b {
+            font-weight: 600;
+        }
+        .welcome-message span.text-blue-600 {
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            color: #1f2937;
+        }
+        .status-indicator i {
+            font-style: italic;
+            color: #10b981;
+        }
+        .chat-box {
+            border: 1px solid #1f2937;
+            border-radius: 0.75rem;
+            height: 300px;
+            overflow-y: auto;
+            padding: 0.75rem;
+            background: linear-gradient(135deg, #ffffff, #e5e7eb);
+            margin-bottom: 1rem;
+        }
+        .chat-input {
+            display: flex;
+            gap: 1rem;
+        }
+        .message {
+            margin: 0.5rem 0;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+        }
+        .system-message {
+            background-color: #e0f7fa;
+            color: #00796b;
+        }
+        .user-message {
+            background-color: #fff3e0;
+            color: #ef6c00;
+            text-align: right;
+        }
+        .star {
+            font-size: 2rem;
+            color: #d1d5db;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+        .star.selected {
+            color: #fbbf24;
+        }
+
+    </style>
+</head>
+<body>
+    <div id="three-canvas"></div>
+    <header class="text-center py-6 sm:py-12 relative">
+        <img src="https://i.ibb.co/cXKbHb7K/photo-2025-08-09-10-06-41.jpg" alt="A360 API Logo" class="mx-auto w-32 h-32 sm:w-40 sm:h-40 md:w-56 md:h-56 logo">
+        <div class="flex items-center justify-center mt-4 sm:mt-6">
+            <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold glow stylish-text mr-4">Abir 360 <i>API</i></h1>
+            <span class="inline-block w-10 h-10">
+                <svg class="w-full h-full" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="12" cy="12" r="10" fill="#28a745" stroke="#ffffff" stroke-width="2"/>
+                    <path d="M9 12.5L11 15L15 9" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+            </span>
+        </div>
+        <p class="welcome-message mt-2 sm:mt-3 tracking-wide stylish-text text-lg sm:text-xl leading-relaxed">
+            Report Issues for the <i>Ultimate</i> API Toolkit: Empowering developers with tools for <b>media downloading</b>, <i>translation</i>, <b>coupon scraping</b>, <i>P2P trading</i>, and more. Built with <b>passion</b> by @ISmartCoder.
+        </p>
+        <div class="status-indicator mt-4 text-lg sm:text-xl stylish-text flex items-center justify-center">
+            <span class="status-dot mr-2"></span> API Status: <i>Online</i>
+        </div>
+    </header>
+
+    <section class="section-card max-w-5xl mx-auto">
+        <h2 class="text-3xl sm:text-4xl font-semibold text-center mb-6 sm:mb-8 glow stylish-text">Report Issues</h2>
+        <div class="chat-box" id="chatBox"></div>
+        <form id="chatForm" class="chat-input mt-4">
+            <input type="text" id="chatInput" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Type a message..." required>
+            <button type="submit" class="btn-glow">Send</button>
+        </form>
+    </section>
+
+    <section class="section-card max-w-5xl mx-auto">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4 stylish-text">Contact Us</h2>
+        <div class="flex flex-wrap gap-4">
+            <a href="https://t.me/ISmartCoder" target="_blank" class="btn-glow">
+                <i class="fab fa-telegram-plane mr-2"></i> Telegram
+            </a>
+            <a href="mailto:abirarafatchawdhury@gmail.com" class="btn-glow">
+                <i class="fas fa-envelope mr-2"></i> Email
+            </a>
+        </div>
+    </section>
+
+    <section class="section-card max-w-5xl mx-auto">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4 stylish-text">Submit a Report</h2>
+        <form id="reportForm" class="space-y-4">
+            <div>
+                <label for="issueType" class="block text-sm font-medium text-gray-700">Issue Type</label>
+                <select id="issueType" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="bug">Bug Report</option>
+                    <option value="feature">Feature Request</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            <div>
+                <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                <textarea id="description" rows="4" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Describe your issue or suggestion..." required></textarea>
+            </div>
+            <div>
+                <label for="endpoint" class="block text-sm font-medium text-gray-700">Affected Endpoint (if any)</label>
+                <input type="text" id="endpoint" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="/example/endpoint">
+            </div>
+            <button type="submit" class="btn-glow">
+                <i class="fas fa-paper-plane mr-2"></i> Submit Report
+            </button>
+        </form>
+    </section>
+
+    <section class="section-card max-w-5xl mx-auto">
+        <h2 class="text-2xl font-semibold text-gray-800 mb-4 stylish-text">Leave Feedback</h2>
+        <div class="space-y-4">
+            <div class="star-rating" id="starRating">
+                <span class="star" data-value="1">★</span>
+                <span class="star" data-value="2">★</span>
+                <span class="star" data-value="3">★</span>
+                <span class="star" data-value="4">★</span>
+                <span class="star" data-value="5">★</span>
+            </div>
+            <p id="ratingValue" class="text-gray-600">Rating: 0/5</p>
+            <textarea id="feedbackComment" rows="3" class="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Your feedback..."></textarea>
+            <button onclick="submitFeedback()" class="btn-glow">
+                <i class="fas fa-thumbs-up mr-2"></i> Submit Feedback
+            </button>
+        </div>
+    </section>
+
+    <!-- Enhanced Footer Section -->
+    <footer class="bg-gradient-to-r from-gray-100 to-gray-200 py-6 sm:py-8 mt-auto">
+        <div class="max-w-5xl mx-auto text-center">
+            <h3 class="text-2xl sm:text-3xl font-semibold mb-4 sm:mb-6 glow stylish-text">Connect with A360 API</h3>
+            <div class="flex justify-center space-x-4 sm:space-x-8 flex-wrap">
+                <a href="https://facebook.com/abirxdhackz" target="_blank" class="hover:text-blue-600 transition-transform transform hover:scale-125"><i class="fab fa-facebook-f text-2xl sm:text-3xl"></i></a>
+                <a href="https://instagram.com/abirxdhackz" target="_blank" class="hover:text-blue-600 transition-transform transform hover:scale-125"><i class="fab fa-instagram text-2xl sm:text-3xl"></i></a>
+                <a href="https://x.com/abirxdhackz" target="_blank" class="hover:text-blue-600 transition-transform transform hover:scale-125"><i class="fab fa-x-twitter text-2xl sm:text-3xl"></i></a>
+                <a href="https://github.com/abirxdhack" target="_blank" class="hover:text-blue-600 transition-transform transform hover:scale-125"><i class="fab fa-github text-2xl sm:text-3xl"></i></a>
+                <a href="https://youtube.com/@abirxdhackz" target="_blank" class="hover:text-blue-600 transition-transform transform hover:scale-125"><i class="fab fa-youtube text-2xl sm:text-3xl"></i></a>
+                <a href="https://t.me/ISmartCoder" target="_blank" class="hover:text-blue-600 transition-transform transform hover:scale-125"><i class="fab fa-telegram text-2xl sm:text-3xl"></i></a>
+                <a href="https://python.org" target="_blank" class="hover:text-blue-600 transition-transform transform hover:scale-125"><i class="fab fa-python text-2xl sm:text-3xl"></i></a>
+            </div>
+            <p class="mt-4 sm:mt-6 text-base sm:text-lg stylish-text">© 2025 A360 API. All rights reserved.</p>
+            <p class="text-sm stylish-text">Developed by <a href="https://t.me/ISmartCoder" target="_blank" class="text-blue-600 hover:underline">@ISmartCoder</a> | Updates: <a href="https://t.me/TheSmartDev" target="_blank" class="text-blue-600 hover:underline">t.me/TheSmartDev</a></p>
+        </div>
+    </footer>
+
+    <script>
+        // Three.js Background Animation
+        let scene, camera, renderer;
+        function initThree() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById('three-canvas').appendChild(renderer.domElement);
+            const geometry = new THREE.BufferGeometry();
+            const vertices = [];
+            const count = 500;
+            for (let i = 0; i < count; i++) {
+                vertices.push(
+                    (Math.random() - 0.5) * 2000,
+                    (Math.random() - 0.5) * 2000,
+                    (Math.random() - 0.5) * 2000
+                );
+            }
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            const material = new THREE.PointsMaterial({ color: 0x1f2937, size: 2 });
+            const points = new THREE.Points(geometry, material);
+            scene.add(points);
+            camera.position.z = 500;
+            animate();
+        }
+        function animate() {
+            requestAnimationFrame(animate);
+            const points = scene.children[0];
+            const positions = points.geometry.attributes.position.array;
+            for (let i = 0; i < positions.length; i += 3) {
+                positions[i + 2] += Math.sin(Date.now() * 0.0005 + i) * 0.1;
+            }
+            points.geometry.attributes.position.needsUpdate = true;
+            renderer.render(scene, camera);
+        }
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Real-Time Date
+        function updateDateTime() {
+            const now = new Date();
+            const options = { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Dhaka', timeZoneName: 'short' };
+            const dateTimeString = now.toLocaleString('en-US', options).replace('AM', 'AM +06').replace('PM', 'PM +06') +
+                                  ' on ' + now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            const dateElement = document.getElementById('real-time-date');
+            if (dateElement) {
+                dateElement.textContent = dateTimeString;
+            }
+        }
+        updateDateTime();
+        setInterval(updateDateTime, 60000);
+
+        // Chat Log
+        function logMessage(type, text) {
+            const chatBox = document.getElementById('chatBox');
+            const message = document.createElement('div');
+            message.className = type === 'system' ? 'message system-message' : 'message user-message';
+            message.textContent = `${type === 'system' ? 'System' : 'You'}: ${text}`;
+            chatBox.appendChild(message);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        // Initialize Three.js on load
+        initThree();
+
+        // Chat Form
+        document.getElementById('chatForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const message = document.getElementById('chatInput').value;
+            if (message) {
+                logMessage('user', message);
+                console.log('Sending to Telegram:', `New chat message from user: ${message}`);
+                fetch('https://api.telegram.org/bot8263713305:AAHOEk-_F4JfIf02z3KdaVMYkXuQDKwO4PE/sendMessage', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: 7666341631,
+                        text: `New chat message from user: ${message}`,
+                        reply_markup: {
+                            inline_keyboard: [[{ text: 'Check Now⚡️', url: 'http://104.248.148.11:8000/' }]]
+                        }
+                    })
+                })
+                .then(response => {
+                    console.log('Telegram response:', response);
+                    if (response.ok) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Message Sent!',
+                            text: 'Your message has been sent to the owner.',
+                            showConfirmButton: false,
+                            timer: 2000,
+                            background: '#e0f7fa',
+                            color: '#00796b'
+                        });
+                    } else {
+                        throw new Error('Failed to send message');
+                    }
+                })
+                .catch(error => {
+                    console.error('Telegram send error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: 'Failed to send message. Please try again later.',
+                        background: '#ffebee',
+                        color: '#c62828'
+                    });
+                });
+                document.getElementById('chatInput').value = '';
+            }
+            return false;
+        });
+
+        // Report Form Submission with Telegram Notification
+        document.getElementById('reportForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const issueType = document.getElementById('issueType').value;
+            const description = document.getElementById('description').value;
+            const endpoint = document.getElementById('endpoint').value;
+            const reportText = `New Report:\nType: ${issueType}\nDescription: ${description}\nEndpoint: ${endpoint || 'N/A'}`;
+            logMessage('system', reportText);
+            console.log('Sending to Telegram:', reportText);
+            fetch('https://api.telegram.org/bot8263713305:AAHOEk-_F4JfIf02z3KdaVMYkXuQDKwO4PE/sendMessage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: 7666341631,
+                    text: reportText,
+                    reply_markup: {
+                        inline_keyboard: [[{ text: 'Check Now⚡️', url: 'http://104.248.148.11:8000/' }]]
+                    }
+                })
+            })
+            .then(response => {
+                console.log('Telegram response:', response);
+                if (response.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Report Sent!',
+                        text: 'Your report has been sent to the owner.',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        background: '#e0f7fa',
+                        color: '#00796b'
+                    });
+                } else {
+                    throw new Error('Failed to send report');
+                }
+            })
+            .catch(error => {
+                console.error('Telegram send error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Failed to send report. Please try again later.',
+                    background: '#ffebee',
+                    color: '#c62828'
+                });
+            });
+            this.reset();
+            return false;
+        });
+
+        // Star Rating with Telegram Notification
+        const stars = document.querySelectorAll('.star');
+        let rating = 0;
+        stars.forEach(star => {
+            star.addEventListener('click', () => {
+                rating = parseInt(star.getAttribute('data-value'));
+                document.getElementById('ratingValue').textContent = `Rating: ${rating}/5`;
+                stars.forEach(s => s.classList.remove('selected'));
+                star.classList.add('selected');
+                for (let i = 1; i < rating; i++) {
+                    stars[i - 1].classList.add('selected');
+                }
+                const ratingText = `API Got Rating: ${rating}/5`;
+                logMessage('system', ratingText);
+                console.log('Sending to Telegram:', ratingText);
+                fetch('https://api.telegram.org/bot8263713305:AAHOEk-_F4JfIf02z3KdaVMYkXuQDKwO4PE/sendMessage', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: 7666341631,
+                        text: ratingText,
+                        reply_markup: {
+                            inline_keyboard: [[{ text: 'Check Now ⚡', url: 'http://104.248.148.11:8000/' }]]
+                        }
+                    })
+                })
+                .then(response => {
+                    console.log('Telegram response:', response);
+                    if (response.ok) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Rating Sent!',
+                            text: 'Your rating has been sent to the owner.',
+                            showConfirmButton: false,
+                            timer: 2000,
+                            background: '#e0f7fa',
+                            color: '#00796b'
+                        });
+                    } else {
+                        throw new Error('Failed to send rating');
+                    }
+                })
+                .catch(error => {
+                    console.error('Telegram send error:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: 'Failed to send rating. Please try again later.',
+                        background: '#ffebee',
+                        color: '#c62828'
+                    });
+                });
+            });
+        });
+
+        // Feedback Submission with Telegram Notification
+        function submitFeedback() {
+            const comment = document.getElementById('feedbackComment').value;
+            const feedbackText = `New Feedback:\nRating: ${rating}/5\nComment: ${comment}`;
+            logMessage('system', feedbackText);
+            console.log('Sending to Telegram:', feedbackText);
+            fetch('https://api.telegram.org/bot8263713305:AAHOEk-_F4JfIf02z3KdaVMYkXuQDKwO4PE/sendMessage', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: 7666341631,
+                    text: feedbackText,
+                    reply_markup: {
+                        inline_keyboard: [[{ text: 'Check Now ⚡️', url: 'http://104.248.148.11:8000/' }]]
+                    }
+                })
+            })
+            .then(response => {
+                console.log('Telegram response:', response);
+                if (response.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Feedback Sent!',
+                        text: 'Your feedback has been sent to the owner.',
+                        showConfirmButton: false,
+                        timer: 2000,
+                        background: '#e0f7fa',
+                        color: '#00796b'
+                    });
+                } else {
+                    throw new Error('Failed to send feedback');
+                }
+            })
+            .catch(error => {
+                console.error('Telegram send error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: 'Failed to send feedback. Please try again later.',
+                    background: '#ffebee',
+                    color: '#c62828'
+                });
+            });
+            document.getElementById('feedbackComment').value = '';
+            document.getElementById('ratingValue').textContent = 'Rating: 0/5';
+            stars.forEach(s => s.classList.remove('selected'));
+            rating = 0;
+        }
+    </script>
+</body>
+</html>

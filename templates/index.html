@@ -1,0 +1,2262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+  <meta name="description" content="A360 API: The ultimate API toolkit for developers, offering tools for media downloading, translation, coupon scraping, P2P trading, and more. Explore our comprehensive API documentation.">
+  <meta name="keywords" content="A360 API, API, media downloader, translation, coupons, P2P trading, Instagram, YouTube, Facebook, Binance, Python, FastAPI">
+  <meta name="author" content="Abir Arafat Chawdhury (@ISmartCoder)">
+  <title>A360 API - Ultimate API Toolkit</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<style>
+body {
+  font-family: 'Inter', sans-serif;
+  color: #1f2937;
+  overflow-x: hidden;
+  overflow-y: auto;
+  margin: 0;
+  background: linear-gradient(135deg, #f9fafb, #d1d5db);
+}
+
+#three-canvas {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  opacity: 0.5;
+  will-change: transform;
+}
+
+.section-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 1rem;
+  padding: 0.75rem;
+  margin: 0.5rem auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  max-width: 95vw;
+}
+
+@media (min-width: 640px) {
+  .section-card {
+    padding: 1.5rem;
+    margin: 1rem auto;
+    max-width: 80vw;
+  }
+  .section-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  }
+}
+
+.logo {
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #1f2937; /* Changed to black for consistency */
+  box-shadow: 0 0 15px rgba(31, 41, 55, 0.4); /* Adjusted shadow color */
+  width: 24vw;
+  height: 24vw;
+  max-width: 100px;
+  max-height: 100px;
+  margin: 0 auto;
+}
+
+@media (min-width: 640px) {
+  .logo {
+    width: 32vw;
+    height: 32vw;
+    max-width: 140px;
+    max-height: 140px;
+  }
+  @media (min-width: 768px) {
+    .logo {
+      max-width: 180px;
+      max-height: 180px;
+    }
+  }
+}
+
+.glow {
+  font-family: 'Poppins', sans-serif;
+  text-shadow: 0 0 8px rgba(31, 41, 55, 0.6), 0 0 16px rgba(31, 41, 55, 0.4); /* Adjusted to black theme */
+}
+
+.stylish-text {
+  font-family: 'Poppins', sans-serif;
+  letter-spacing: 0.5px;
+  color: #1f2937; /* Ensured black text */
+}
+
+.btn-glow {
+  background: linear-gradient(90deg, #1f2937, #4b5563); /* Changed to black gradient */
+  color: #ffffff;
+  transition: all 0.3s ease;
+  padding: 0.5rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 5px rgba(31, 41, 55, 0.3); /* Adjusted shadow */
+}
+
+@media (min-width: 640px) {
+  .btn-glow {
+    padding: 0.75rem 1.5rem;
+    font-size: 1rem;
+  }
+  .btn-glow:hover {
+    box-shadow: 0 0 15px rgba(31, 41, 55, 0.6);
+    transform: scale(1.05);
+    background: linear-gradient(90deg, #111827, #374151); /* Darker black gradient */
+  }
+}
+
+.endpoint-card {
+  background: linear-gradient(135deg, #ffffff, #e5e7eb);
+  border: 1px solid #1f2937; /* Changed to black */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  max-width: 95vw;
+}
+
+@media (min-width: 640px) {
+  .endpoint-card {
+    padding: 1.25rem;
+    max-width: 80vw;
+  }
+  .endpoint-card:hover {
+    transform: scale(1.03);
+    box-shadow: 0 6px 15px rgba(31, 41, 55, 0.2); /* Adjusted shadow */
+  }
+}
+
+.code-block {
+  background: #1f2937;
+  color: #f3f4f6;
+  font-family: 'Inter', sans-serif;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+@media (min-width: 640px) {
+  .code-block {
+    padding: 1rem;
+    font-size: 0.9rem;
+  }
+}
+
+.status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: bold;
+  font-size: 0.9rem;
+  color: #10b981;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+}
+
+@media (min-width: 640px) {
+  .status-indicator {
+    font-size: 1rem;
+  }
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #10b981;
+  animation: pulse 2.5s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.2); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.project-card {
+  background: linear-gradient(135deg, #ffffff, #e5e7eb);
+  border: 1px solid #1f2937; /* Changed to black */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  text-align: center;
+  max-width: 95vw;
+}
+
+@media (min-width: 640px) {
+  .project-card {
+    padding: 1.25rem;
+    max-width: 80vw;
+  }
+  .project-card:hover {
+    transform: scale(1.03);
+    box-shadow: 0 6px 15px rgba(31, 41, 55, 0.2); /* Adjusted shadow */
+  }
+}
+
+header {
+  padding: 1rem 0.5rem;
+  background: linear-gradient(135deg, #e0f7fa, #ffffff);
+  border-bottom: 2px solid #1f2937; /* Changed to black */
+}
+header .flex {
+  align-items: center;
+}
+
+header svg circle {
+  transition: transform 0.3s ease;
+}
+header svg path {
+  transition: stroke 0.3s ease;
+}
+header:hover svg circle {
+  transform: scale(1.1);
+}
+header:hover svg path {
+  stroke-width: 2.5;
+}
+
+.welcome-message {
+  max-width: 95vw;
+  margin-left: auto;
+  margin-right: auto;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  color: #1f2937; /* Ensured black text */
+}
+@media (min-width: 640px) {
+  .welcome-message {
+    font-size: 1rem;
+    max-width: 80vw;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+}
+.welcome-message i {
+  font-style: italic;
+}
+.welcome-message b {
+  font-weight: 600;
+}
+.welcome-message span.text-blue-600 {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  color: #1f2937; /* Removed blue, set to black */
+}
+
+.status-indicator i {
+  font-style: italic;
+  color: #10b981;
+}
+</style>
+<header class="text-center py-6 sm:py-12 relative">
+  <img src="https://i.ibb.co/cXKbHb7K/photo-2025-08-09-10-06-41.jpg" alt="A360 API Logo" class="mx-auto w-32 h-32 sm:w-40 sm:h-40 md:w-56 md:h-56 logo">
+  <div class="flex items-center justify-center mt-4 sm:mt-6">
+    <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold glow stylish-text mr-4">A360 <i>API</i></h1>
+    <span class="inline-block w-10 h-10">
+      <svg class="w-full h-full" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="10" fill="#28a745" stroke="#ffffff" stroke-width="2"/>
+        <path d="M9 12.5L11 15L15 9" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </span>
+  </div>
+  <p class="welcome-message mt-2 sm:mt-3 tracking-wide stylish-text text-lg sm:text-xl leading-relaxed">
+    The <i>Ultimate</i> API Toolkit: Empowering developers with tools for <b>media downloading</b>, <i>translation</i>, <b>coupon scraping</b>, <i>P2P trading</i>, and more. Built with <b>passion</b> by @ISmartCoder.
+  </p>
+  <div class="status-indicator mt-4 text-lg sm:text-xl stylish-text flex items-center justify-center">
+    <span class="status-dot mr-2"></span> API Status: <i>Online</i>
+  </div>
+  <a href="#api-docs" class="inline-flex items-center btn-glow font-bold py-2 px-4 sm:py-3 sm:px-6 rounded-xl mt-4 sm:mt-6 stylish-text transition-transform hover:scale-110">
+    <i class="fas fa-book mr-2 text-lg sm:text-xl"></i> Explore API Docs
+  </a>
+</header>
+<!-- Introduction Section -->
+<section class="section-card max-w-5xl mx-auto">
+  <h2 class="text-3xl sm:text-4xl font-semibold text-center mb-6 sm:mb-8 glow stylish-text">Welcome to A360 API</h2>
+  <p class="text-base sm:text-lg stylish-text mb-4">
+    👋 Cordially welcome to A360 API, where innovation ignites fascination! 🚀 Step into a ⚡️electrifying realm of endless possibilities—unleash the power of media downloads 📂, seamless translations 🌐, coupon treasure hunts 🧩, and P2P trading mastery 💸. Crafted by the visionary @ISmartCoder, every endpoint sparks 🔥creativity and unwavering reliability. ✅ Embrace cutting-edge tools that ⭐️shine with premium performance. 📅 As of <span id="real-time-date"></span>, we’re here to revolutionize your journey! 🙊 The magic lies in the details! 👁❤️🔥
+  </p>
+  <p class="text-base sm:text-lg stylish-text mb-4">
+    This is no ordinary API—it’s a 🚨game-changer❗️ Whether you’re a developer 👤, a bot creator, or an explorer, A360 API unlocks boundless potential. 💀 Bid farewell to limitations and greet a toolkit that adapts to your dreams. 📍 Begin your epic adventure now, with every feature meticulously designed for your success! 📝
+  </p>
+</section>
+<script>
+  function updateDateTime() {
+    const now = new Date();
+    const options = { hour: '2-digit', minute: '2-digit', hour12: true, timeZone: 'Asia/Dhaka', timeZoneName: 'short' };
+    const dateTimeString = now.toLocaleString('en-US', options).replace('AM', 'AM +06').replace('PM', 'PM +06') + 
+                          ' on ' + now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    document.getElementById('real-time-date').textContent = dateTimeString;
+  }
+  updateDateTime(); // Initial call
+  setInterval(updateDateTime, 60000); // Update every minute
+</script>
+</html>
+  <!-- API Documentation Section -->
+  <section id="api-docs" class="section-card max-w-5xl mx-auto">
+    <h2 class="text-3xl sm:text-4xl font-semibold text-center mb-6 sm:mb-8 glow stylish-text">API Documentation</h2>
+    <p class="text-base sm:text-lg stylish-text mb-6">Explore all 52 endpoints of A360 API below. Each endpoint is detailed with its purpose, parameters, example requests, and sample responses. Click the "Try It" buttons to test endpoints directly or use the provided curl commands.</p>
+    <div class="space-y-8">
+      <!-- /ccgen Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/ccgen</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Generates credit card numbers based on a provided BIN (Bank Identification Number). Supports AMEX and non-AMEX cards with Luhn algorithm validation.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/ccgen?bin={bin}&month={month}&year={year}&cvv={cvv}&amount={amount}</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>bin</code> (required, string): Bank Identification Number (6-15 digits or with 'x').</li>
+          <li><code>month</code> (optional, string): Card expiry month (e.g., "01").</li>
+          <li><code>year</code> (optional, string): Card expiry year (e.g., "2025").</li>
+          <li><code>cvv</code> (optional, string): Card CVV (3 or 4 digits).</li>
+          <li><code>amount</code> (optional, integer): Number of cards to generate (1-2000, default 10).</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/ccgen?bin=515462&amount=2"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "status": "success",
+  "bin": "515462",
+  "amount": 2,
+  "cards": [
+    "5154621234567890|01|2028|123",
+    "5154629876543210|06|2027|456"
+  ],
+  "Bank": "Chase Bank",
+  "Country": "United States",
+  "BIN Info": "Mastercard - Credit",
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/ccgen?bin=515462&amount=2" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It
+        </a>
+      </div>
+      <!-- /fake/address Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/fake/address</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Generates fake addresses for a specified country using the SmartFaker library.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/fake/address?code={countryCode}&amount={amount}</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>code</code> (required, string): ISO 3166-1 alpha-2 country code (e.g., "BD", "GB"). Use "UK" for "GB".</li>
+          <li><code>amount</code> (optional, integer): Number of addresses to generate (default 1).</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/fake/address?code=BD&amount=1"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "street_address": "123 Gulshan Avenue",
+  "person_name": "Rahim Khan",
+  "city": "Dhaka",
+  "gender": "Male",
+  "postal_code": "1212",
+  "phone_number": "+8801712345678",
+  "country": "Bangladesh",
+  "country_flag": "BD",
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/fake/address?code=BD&amount=1" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It
+        </a>
+      </div>
+      <!-- /fake/countries Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/fake/countries</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Lists supported countries for fake address generation using the SmartFaker library.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/fake/countries</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong> None</p>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/fake/countries"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "countries": [
+    {"country_code": "BD", "country_name": "Bangladesh"},
+    {"country_code": "GB", "country_name": "United Kingdom"}
+  ],
+  "total_countries": 2,
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/fake/countries" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It
+        </a>
+      </div>
+<!-- /bindb/bin Endpoint -->
+<div class="endpoint-card">
+  <h3 class="text-2xl font-bold stylish-text mb-4">/bindb/bin</h3>
+  <p class="text-base stylish-text mb-2"><strong>Description:</strong> Retrieves BIN information for a single BIN or searches BINs by country or bank using the SmartBinDB library. Supports single BIN lookup or bulk searches with an optional amount parameter. Country-based searches return detailed BIN data including issuer, card type, and brand.</p>
+  <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+  <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/bindb/bin?num={bin}&country={code}&bank={bank}&amount={amount}</code></p>
+  <p class="text-base stylish-text mb-2"><strong>Parameters:</strong> (At least one of <code>num</code>, <code>country</code>, or <code>bank</code> is required)</p>
+  <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+    <li><code>num</code> (optional, string): BIN number for single lookup (e.g., "515462").</li>
+    <li><code>country</code> (optional, string): ISO 3166-1 alpha-2 country code for BIN search (e.g., "BD" or "UK"). Note: "UK" is automatically converted to "GB".</li>
+    <li><code>bank</code> (optional, string): Bank name for BIN search (e.g., "Chase").</li>
+    <li><code>amount</code> (optional, integer, default=1000): Number of BINs to return for country or bank searches.</li>
+  </ul>
+  <p class="text-base stylish-text mb-2"><strong>Example Request (Single BIN):</strong></p>
+  <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/bindb/bin?num=515462"</code></pre>
+  <p class="text-base stylish-text mb-2"><strong>Example Response (Single BIN):</strong></p>
+  <pre class="code-block"><code>
+{
+  "bin": "515462",
+  "brand": "MASTERCARD",
+  "category": "CREDIT",
+  "CardTier": "CREDIT MASTERCARD",
+  "country_code": "US",
+  "Type": "CREDIT",
+  "country_code_alpha3": "USA",
+  "Country": {
+    "A2": "US",
+    "A3": "USA",
+    "N3": "840",
+    "Name": "United States",
+    "Cont": "North America"
+  },
+  "issuer": "Chase Bank",
+  "phone": "+18009359935",
+  "type": "CREDIT",
+  "website": "https://www.chase.com",
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+  </code></pre>
+  <p class="text-base stylish-text mb-2"><strong>Example Request (Country Search):</strong></p>
+  <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/bindb/bin?country=BD&amount=2"</code></pre>
+  <p class="text-base stylish-text mb-2"><strong>Example Response (Country Search):</strong></p>
+  <pre class="code-block"><code>
+{
+  "results": [
+    {
+      "bin": "101017",
+      "brand": "LOCAL BRAND",
+      "category": "PROPRIETARY",
+      "CardTier": "PROPRIETARY LOCAL BRAND",
+      "country_code": "BD",
+      "Type": "DEBIT",
+      "country_code_alpha3": "BGD",
+      "Country": {
+        "A2": "BD",
+        "A3": "BGD",
+        "N3": "050",
+        "Name": "Bangladesh",
+        "Cont": "Asia"
+      },
+      "issuer": "PRIME BANK, LTD.",
+      "phone": "+88029662776",
+      "type": "DEBIT",
+      "website": "https://www.primebank.com.bd"
+    },
+    {
+      "bin": "101018",
+      "brand": "LOCAL BRAND",
+      "category": "PREPAID",
+      "CardTier": "PREPAID LOCAL BRAND",
+      "country_code": "BD",
+      "Type": "DEBIT",
+      "country_code_alpha3": "BGD",
+      "Country": {
+        "A2": "BD",
+        "A3": "BGD",
+        "N3": "050",
+        "Name": "Bangladesh",
+        "Cont": "Asia"
+      },
+      "issuer": "PRIME BANK, LTD.",
+      "phone": "+88029662776",
+      "type": "DEBIT",
+      "website": "https://www.primebank.com.bd"
+    }
+  ],
+  "total_results": 2,
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+  </code></pre>
+  <p class="text-base stylish-text mb-2"><strong>Example Request (Bank Search):</strong></p>
+  <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/bindb/bin?bank=Chase&amount=2"</code></pre>
+  <p class="text-base stylish-text mb-2"><strong>Example Response (Bank Search):</strong></p>
+  <pre class="code-block"><code>
+{
+  "results": [
+    {
+      "bin": "515462",
+      "brand": "MASTERCARD",
+      "category": "CREDIT",
+      "CardTier": "CREDIT MASTERCARD",
+      "country_code": "US",
+      "Type": "CREDIT",
+      "country_code_alpha3": "USA",
+      "Country": {
+        "A2": "US",
+        "A3": "USA",
+        "N3": "840",
+        "Name": "United States",
+        "Cont": "North America"
+      },
+      "issuer": "Chase Bank",
+      "phone": "+18009359935",
+      "type": "CREDIT",
+      "website": "https://www.chase.com"
+    },
+    {
+      "bin": "527891",
+      "brand": "VISA",
+      "category": "DEBIT",
+      "CardTier": "DEBIT VISA",
+      "country_code": "US",
+      "Type": "DEBIT",
+      "country_code_alpha3": "USA",
+      "Country": {
+        "A2": "US",
+        "A3": "USA",
+        "N3": "840",
+        "Name": "United States",
+        "Cont": "North America"
+      },
+      "issuer": "Chase Bank",
+      "phone": "+18009359935",
+      "type": "DEBIT",
+      "website": "https://www.chase.com"
+    }
+  ],
+  "total_results": 2,
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+  </code></pre>
+  <p class="text-base stylish-text mb-2"><strong>Note:</strong> The endpoint uses the SmartBinDB library. For country searches, use standard ISO 3166-1 alpha-2 codes (e.g., "BD" for Bangladesh, "US" for United States). "UK" is converted to "GB" internally. The <code>amount</code> parameter limits the number of results for country or bank searches (default 1000). Ensure valid parameters are provided to avoid errors.</p>
+  <a href="https://web-production-28e2a.up.railway.app/docs" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+    <i class="fas fa-play mr-2"></i> Try It (via API Docs)
+  </a>
+</div>
+      <!-- /pypi Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/pypi</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Retrieves package information from the PyPI API for a specified Python package.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/pypi?query={packageName}</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>query</code> (required, string): Name of the Python package (e.g., "smartfaker").</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/pypi?query=smartfaker"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "author": null,
+  "authorEmail": "ISmartCoder <abrixdhackz.info.me@gmail.com>",
+  "bugtrackUrl": null,
+  "description": "A powerful Python library for generating fake addresses, supporting bots, MTProto API frameworks, and Python scripts",
+  "docsUrl": null,
+  "homePage": null,
+  "keywords": [],
+  "license": null,
+  "link": "https://pypi.org/project/smartfaker/",
+  "releaseUrl": "https://pypi.org/project/smartfaker/2.18.0/",
+  "title": "smartfaker",
+  "version": "2.18.0",
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/pypi?query=smartfaker" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It
+        </a>
+      </div>
+      <!-- /git/user Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/git/user</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Retrieves a list of public repositories for a GitHub user using the GitHub API.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/git/user?username={username}</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>username</code> (required, string): GitHub username (e.g., "abirxdhack").</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/git/user?username=abirxdhack"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+[
+  {
+    "id": 909546903,
+    "name": "abirxdhack",
+    "full_name": "abirxdhack/abirxdhack",
+    "html_url": "https://github.com/abirxdhack/abirxdhack",
+    "description": null,
+    "stargazers_count": 14,
+    "forks_count": 0,
+    "language": null
+  }
+]
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/git/user?username=abirxdhack" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It
+        </a>
+      </div>
+      <!-- /country Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/country</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Retrieves detailed country information using the REST Countries API.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/country?name={countryName}</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>name</code> (required, string): Country name (e.g., "Bangladesh").</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/country?name=Bangladesh"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+[
+  {
+    "name": {
+      "common": "Bangladesh",
+      "official": "People's Republic of Bangladesh"
+    },
+    "tld": [".bd"],
+    "cca2": "BD",
+    "currencies": {"BDT": {"symbol": "$", "name": "Bangladeshi taka"}},
+    "capital": ["Dhaka"],
+    "region": "Asia",
+    "languages": {"ben": "Bengali"},
+    "population": 164689383,
+    "flag": "BD"
+  }
+]
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/country?name=Bangladesh" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It
+        </a>
+      </div>
+      <!-- /eng/gmr Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/eng/gmr</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Checks and corrects grammar in a sentence using the Google Gemini API.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/eng/gmr?content={sentence}</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>content</code> (required, string): Sentence to check (e.g., "I has a cat").</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/eng/gmr?content=I%20has%20a%20cat"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "response": "I have a cat",
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/eng/gmr?content=I%20has%20a%20cat" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It
+        </a>
+      </div>
+      <!-- /eng/spl Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/eng/spl</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Checks and corrects spelling of a single word using the Google Gemini API.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/eng/spl?word={word}</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>word</code> (required, string): Word to check (e.g., "recieve").</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/eng/spl?word=recieve"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "response": "receive",
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/eng/spl?word=recieve" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It
+        </a>
+      </div>
+      <!-- /eng/prn Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/eng/prn</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Retrieves pronunciation details for a word using the Dictionary API.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/eng/prn?word={word}</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>word</code> (required, string): Word to lookup (e.g., "cat").</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/eng/prn?word=cat"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "response": {
+    "Word": "Cat",
+    "- Breakdown": "kat",
+    "- Pronunciation": "/kat/",
+    "- Phonemes": "/k/, /a/, /t/",
+    "Word Stems": "cat, cats, catless, catlike",
+    "Definition": "- A small domesticated carnivorous mammal",
+    "Audio": "https://api.dictionaryapi.dev/media/pronunciations/en/cat-us.mp3"
+  },
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/eng/prn?word=cat" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It
+        </a>
+      </div>
+      <!-- /eng/syn Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/eng/syn</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Retrieves synonyms for a word using the Datamuse API.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/eng/syn?word={word}</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>word</code> (required, string): Word to find synonyms for (e.g., "big").</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/eng/syn?word=big"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "response": ["large", "huge", "enormous"],
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/eng/syn?word=big" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It
+        </a>
+      </div>
+      <!-- /eng/ant Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/eng/ant</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Retrieves antonyms for a word using the Datamuse API.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/eng/ant?word={word}</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>word</code> (required, string): Word to find antonyms for (e.g., "big").</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/eng/ant?word=big"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "response": ["small", "tiny", "little"],
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/eng/ant?word=big" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It
+        </a>
+      </div>
+      <!-- /p2p Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/p2p</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Fetches Binance P2P trading data, including seller details, prices, and payment methods for specified assets and fiat currencies.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/p2p?asset={asset}&pay_type={fiat}&pay_method={method}&trade_type={type}&limit={limit}&sort_by={sort}&order={order}&min_completion_rate={rate}&min_orders={orders}&online_only={bool}</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>asset</code> (optional, string): Cryptocurrency (e.g., "USDT"). Default: "USDT". Supported: USDT, BTC, ETH, BNB, BUSD, ADA, DOT, MATIC, SHIB, DOGE.</li>
+          <li><code>pay_type</code> (optional, string): Fiat currency (e.g., "BDT"). Default: "BDT". See <code>/p2p/currencies</code> for full list.</li>
+          <li><code>pay_method</code> (optional, string): Payment method (e.g., "BKASH"). Default: "ALL". See <code>/p2p/methods</code> for options.</li>
+          <li><code>trade_type</code> (optional, string): Trade direction ("BUY" or "SELL"). Default: "SELL".</li>
+          <li><code>limit</code> (optional, integer): Number of results (1-1000). Default: 100.</li>
+          <li><code>sort_by</code> (optional, string): Sort by ("price", "completion_rate", "available_amount", "monthly_orders"). Default: "price".</li>
+          <li><code>order</code> (optional, string): Sort order ("asc" or "desc"). Default: "asc".</li>
+          <li><code>min_completion_rate</code> (optional, float): Minimum seller completion rate (0-100).</li>
+          <li><code>min_orders</code> (optional, integer): Minimum seller monthly orders.</li>
+          <li><code>online_only</code> (optional, boolean): Show only online merchants (true/false). Default: false.</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/p2p?asset=USDT&pay_type=BDT&pay_method=BKASH&trade_type=SELL&limit=2"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "success": true,
+  "data": [
+    {
+      "id": "12345",
+      "seller_name": "Seller1",
+      "price": 120.5,
+      "fiat_unit": "BDT",
+      "available_amount": 1000.0,
+      "min_order_amount": 500.0,
+      "max_order_amount": 5000.0,
+      "completion_rate": 95.5,
+      "monthly_orders": 50,
+      "payment_methods": ["bKash"],
+      "user_type": "merchant",
+      "online_status": "online"
+    }
+  ],
+  "count": 1,
+  "total_found": 1,
+  "total_sellers": 1,
+  "time_taken": 0.123,
+  "trade_type": "SELL",
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz",
+  "statistics": {
+    "avg_price": 120.5,
+    "min_price": 119.0,
+    "max_price": 122.0,
+    "total_available": 1000.0
+  },
+  "parameters": {
+    "asset": "USDT",
+    "pay_type": "BDT",
+    "pay_method": "BKASH",
+    "trade_type": "SELL",
+    "limit": 2,
+    "sort_by": "price",
+    "order": "asc",
+    "filters_applied": {}
+  },
+  "timestamp": "2025-07-18T08:26:00.123456+06:00",
+  "cache_status": "served"
+}
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/p2p?asset=USDT&pay_type=BDT&pay_method=BKASH&trade_type=SELL&limit=2" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It
+        </a>
+      </div>
+      <!-- /p2p/methods Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/p2p/methods</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Lists supported payment methods for each fiat currency in Binance P2P trading.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/p2p/methods</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong> None</p>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/p2p/methods"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "success": true,
+  "data": {
+    "BDT": ["BKASH", "NAGAD", "ROCKET", "UPAY", "BANK"],
+    "USD": ["WISE", "PAYPAL", "BANK", "ZELLE"]
+  },
+  "timestamp": "2025-07-18T08:26:00.123456+06:00",
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/p2p/methods" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It
+        </a>
+      </div>
+      <!-- /p2p/currencies Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/p2p/currencies</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Lists supported cryptocurrencies, fiat currencies, and trade types for Binance P2P trading.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/p2p/currencies</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong> None</p>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/p2p/currencies"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "success": true,
+  "data": {
+    "crypto_assets": ["USDT", "BTC", "ETH", "BNB", "BUSD", "ADA", "DOT", "MATIC", "SHIB", "DOGE"],
+    "fiat_currencies": ["BDT", "USD", "EUR"],
+    "trade_types": ["BUY", "SELL"]
+  },
+  "total_currencies": 45,
+  "total_assets": 10,
+  "timestamp": "2025-07-18T08:26:00.123456+06:00",
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/p2p/currencies" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It
+        </a>
+      </div>
+<!-- /binance/24h Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/binance/24h</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Retrieves 24-hour ticker data for all trading pairs from the Binance API, including price changes, volumes, and more.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/binance/24h</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong> None</p>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/binance/24h"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "success": true,
+  "data": [
+    {
+      "symbol": "LTCUSDT",
+      "priceChange": "5.34000000",
+      "priceChangePercent": "4.453",
+      "weightedAvgPrice": "123.35641919",
+      "prevClosePrice": "119.93000000",
+      "lastPrice": "125.27000000",
+      "lastQty": "0.71000000",
+      "bidPrice": "125.26000000",
+      "bidQty": "18.22400000",
+      "askPrice": "125.27000000",
+      "askQty": "177.25400000",
+      "openPrice": "119.93000000",
+      "highPrice": "126.42000000",
+      "lowPrice": "119.84000000",
+      "volume": "650599.44500000",
+      "quoteVolume": "80255617.86509000",
+      "openTime": 1754633791009,
+      "closeTime": 1754720191009,
+      "firstId": 490674123,
+      "lastId": 491212869,
+      "count": 538747
+    },
+    ...
+  ],
+  "count": 1234,
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/binance/24h" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It
+        </a>
+      </div>
+      <!-- /binance/price Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/binance/price</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Retrieves 24-hour ticker data for a specific cryptocurrency trading pair (e.g., LTCUSDT) from the Binance API.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/binance/price?token={token}</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>token</code> (required, string): Cryptocurrency token symbol (e.g., "LTC"). Appended with "USDT" to form the trading pair (e.g., "LTCUSDT").</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/binance/price?token=LTC"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "success": true,
+  "data": {
+    "symbol": "LTCUSDT",
+    "priceChange": "5.34000000",
+    "priceChangePercent": "4.453",
+    "weightedAvgPrice": "123.35641919",
+    "prevClosePrice": "119.93000000",
+    "lastPrice": "125.27000000",
+    "lastQty": "0.71000000",
+    "bidPrice": "125.26000000",
+    "bidQty": "18.22400000",
+    "askPrice": "125.27000000",
+    "askQty": "177.25400000",
+    "openPrice": "119.93000000",
+    "highPrice": "126.42000000",
+    "lowPrice": "119.84000000",
+    "volume": "650599.44500000",
+    "quoteVolume": "80255617.86509000",
+    "openTime": 1754633791009,
+    "closeTime": 1754720191009,
+    "firstId": 490674123,
+    "lastId": 491212869,
+    "count": 538747
+  },
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/binance/price?token=LTC" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It
+        </a>
+      </div>
+      <!-- /binance/cx Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/binance/cx</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Converts a specified amount of one cryptocurrency (base) to another (target) using Binance's spot price API. Supports direct and inverse trading pairs.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/binance/cx?base={base}&target={targetcoin}&amount={amount}</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>base</code> (required, string): Base cryptocurrency symbol (e.g., "TON").</li>
+          <li><code>target</code> (required, string): Target cryptocurrency symbol (e.g., "USDT").</li>
+          <li><code>amount</code> (optional, float): Amount of base coin to convert (default: 1.0, must be > 0).</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/binance/cx?base=TON&target=USDT&amount=10"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "success": true,
+  "data": {
+    "base_coin": "TON",
+    "target_coin": "USDT",
+    "amount": 10.0,
+    "converted_amount": 50.1234,
+    "total_in_usdt": 50.1234,
+    "base_usdt_price": 5.01234,
+    "target_usdt_price": 1.0
+  },
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/binance/cx?base=TON&target=USDT&amount=10" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It
+        </a>
+      </div>
+<!-- /binance/gainers Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/binance/gainers</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Retrieves the top cryptocurrencies with the highest 24-hour price change percentage from the Binance API. Returns up to 100 results by default, with an optional custom amount.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/binance/gainers</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>amount</code> (optional, integer): Number of top gainers to return (default: 100, max: 1000, must be > 0).</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request (Default 100 Results):</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/binance/gainers"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response (Default 100 Results):</strong></p>
+        <pre class="code-block"><code>
+{
+  "success": true,
+  "data": [
+    {
+      "symbol": "BTCUSDT",
+      "priceChangePercent": "5.432",
+      "lastPrice": "60000.00",
+      "highPrice": "61000.00",
+      "lowPrice": "57000.00",
+      "volume": "1000.00",
+      "quoteVolume": "60000000.00"
+    },
+    {
+      "symbol": "ETHUSDT",
+      "priceChangePercent": "4.876",
+      "lastPrice": "2500.00",
+      "highPrice": "2600.00",
+      "lowPrice": "2400.00",
+      "volume": "2000.00",
+      "quoteVolume": "5000000.00"
+    },
+    ...
+  ],
+  "count": 100,
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Request (Custom 200 Results):</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/binance/gainers?amount=200"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response (Custom 200 Results):</strong></p>
+        <pre class="code-block"><code>
+{
+  "success": true,
+  "data": [
+    {
+      "symbol": "BTCUSDT",
+      "priceChangePercent": "5.432",
+      "lastPrice": "60000.00",
+      "highPrice": "61000.00",
+      "lowPrice": "57000.00",
+      "volume": "1000.00",
+      "quoteVolume": "60000000.00"
+    },
+    {
+      "symbol": "ETHUSDT",
+      "priceChangePercent": "4.876",
+      "lastPrice": "2500.00",
+      "highPrice": "2600.00",
+      "lowPrice": "2400.00",
+      "volume": "2000.00",
+      "quoteVolume": "5000000.00"
+    },
+    ...
+  ],
+  "count": 200,
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/binance/gainers" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It
+        </a>
+      </div>
+      <!-- /binance/losers Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/binance/losers</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Retrieves the top cryptocurrencies with the lowest 24-hour price change percentage from the Binance API. Returns up to 100 results by default, with an optional custom amount.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/binance/losers</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>amount</code> (optional, integer): Number of top losers to return (default: 100, max: 1000, must be > 0).</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request (Default 100 Results):</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/binance/losers"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response (Default 100 Results):</strong></p>
+        <pre class="code-block"><code>
+{
+  "success": true,
+  "data": [
+    {
+      "symbol": "XRPUSDT",
+      "priceChangePercent": "-4.123",
+      "lastPrice": "0.50",
+      "highPrice": "0.55",
+      "lowPrice": "0.48",
+      "volume": "1000000.00",
+      "quoteVolume": "500000.00"
+    },
+    {
+      "symbol": "ADAUSDT",
+      "priceChangePercent": "-3.987",
+      "lastPrice": "0.35",
+      "highPrice": "0.38",
+      "lowPrice": "0.34",
+      "volume": "2000000.00",
+      "quoteVolume": "700000.00"
+    },
+    ...
+  ],
+  "count": 100,
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Request (Custom 200 Results):</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/binance/losers?amount=200"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response (Custom 200 Results):</strong></p>
+        <pre class="code-block"><code>
+{
+  "success": true,
+  "data": [
+    {
+      "symbol": "XRPUSDT",
+      "priceChangePercent": "-4.123",
+      "lastPrice": "0.50",
+      "highPrice": "0.55",
+      "lowPrice": "0.48",
+      "volume": "1000000.00",
+      "quoteVolume": "500000.00"
+    },
+    {
+      "symbol": "ADAUSDT",
+      "priceChangePercent": "-3.987",
+      "lastPrice": "0.35",
+      "highPrice": "0.38",
+      "lowPrice": "0.34",
+      "volume": "2000000.00",
+      "quoteVolume": "700000.00"
+    },
+    ...
+  ],
+  "count": 200,
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/binance/losers" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It
+        </a>
+      </div>
+	  <!-- /net/chk Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/net/chk</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Retrieves information about an IP address, including ASN, ISP, country, city, and timezone, using the ipinfo.io API.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/net/chk?ip={ip}</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>ip</code> (required, string): IP address to check (e.g., "8.8.8.8").</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/net/chk?ip=8.8.8.8"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "success": true,
+  "data": {
+    "ip": "8.8.8.8",
+    "asn": "AS15169 Google LLC",
+    "isp": "AS15169 Google LLC",
+    "country": "US",
+    "city": "Mountain View",
+    "timezone": "America/Los_Angeles",
+    "fraud_score": 0,
+    "risk_level": "low"
+  },
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/net/chk?ip=8.8.8.8" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It
+        </a>
+      </div>
+      <!-- /net/px Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/net/px</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Checks the status, anonymity level, and location of a proxy using httpbin.org and ipinfo.io APIs. Supports HTTP/HTTPS proxies with optional authentication.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/net/px?proxy={proxy}</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>proxy</code> (required, string): Proxy address in format <code>ip:port</code> or <code>ip:port:user:pass</code> for authenticated proxies, or <code>protocol://ip:port</code> (e.g., "192.168.1.1:8080", "192.168.1.1:8080:user:pass", "http://192.168.1.1:8080").</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/net/px?proxy=192.168.1.1:8080"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "success": true,
+  "data": {
+    "proxy": "192.168.1.1:8080",
+    "status": "Live",
+    "location": "California (US)",
+    "anonymity": "Elite",
+    "ip": "192.168.1.1"
+  },
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/net/px?proxy=192.168.1.1:8080" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It
+        </a>
+      </div>
+	  <!-- /sk/chk Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/sk/chk</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Verifies if a Stripe API key is live or dead by checking access to the Stripe account endpoint.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/sk/chk?key={stripeKey}</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>key</code> (required, string): Stripe API key to verify (e.g., "sk_test_123456789").</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/sk/chk?key=sk_test_123456789"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "success": true,
+  "data": {
+    "status": "Live"
+  },
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/sk/chk?key=sk_test_123456789" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It
+        </a>
+      </div>
+      <!-- /sk/info Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/sk/info</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Retrieves detailed information about a Stripe account associated with the provided API key, including ID, email, country, business name, type, payouts enabled, and details submitted.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/sk/info?key={stripeKey}</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>key</code> (required, string): Stripe API key to retrieve information for (e.g., "sk_test_123456789").</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/sk/info?key=sk_test_123456789"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "success": true,
+  "data": {
+    "id": "acct_1A2B3C4D5E6F7G8H",
+    "email": "example@stripe.com",
+    "country": "US",
+    "business_name": "Example Business",
+    "type": "standard",
+    "payouts_enabled": true,
+    "details_submitted": true
+  },
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/sk/info?key=sk_test_123456789" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It
+        </a>
+      </div>
+      <!-- /sk/time Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/sk/time</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Retrieves the current time, date, day, and timezone for a specified country, using country code (e.g., "BD") or name (e.g., "Bangladesh").</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/sk/time?country={country}</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>country</code> (required, string): Country code (e.g., "BD") or name (e.g., "Bangladesh").</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/sk/time?country=BD"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "success": true,
+  "data": {
+    "country_name": "Bangladesh",
+    "country_code": "BD",
+    "time": "03:36:00 PM",
+    "date": "09 Aug, 2025",
+    "day": "Saturday",
+    "timezone": "Asia/Dhaka",
+    "flag": "BD"
+  },
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/sk/time?country=BD" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It
+        </a>
+      </div>
+	  <!-- /tmail/gen Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/tmail/gen</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Generates a temporary email account using the mail.tm API. Supports custom username and password or generates random credentials if not provided.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/tmail/gen?username={username}&password={password}</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>username</code> (optional, string): Desired username for the email (e.g., "testuser"). If not provided, a random username is generated.</li>
+          <li><code>password</code> (optional, string): Desired password for the email (e.g., "Test1234"). If not provided, a random password is generated.</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request (Custom Credentials):</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/tmail/gen?username=testuser&password=Test1234"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response (Custom Credentials):</strong></p>
+        <pre class="code-block"><code>
+{
+  "success": true,
+  "data": {
+    "email": "testuser@moakt.cc",
+    "password": "Test1234",
+    "token": "xyz123",
+    "short_id": "a1b2c3d4e5"
+  },
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Request (Random Credentials):</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/tmail/gen"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response (Random Credentials):</strong></p>
+        <pre class="code-block"><code>
+{
+  "success": true,
+  "data": {
+    "email": "randomxyz@moakt.cc",
+    "password": "Ab12Cd34Ef56",
+    "token": "abc789",
+    "short_id": "f6g7h8i9j0"
+  },
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/tmail/gen" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It
+        </a>
+      </div>
+      <!-- /tmail/cmail Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/tmail/cmail</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Retrieves up to 10 email messages from a temporary email account using a mail.tm token. Returns message details including sender, subject, and content.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/tmail/cmail?token={token}</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>token</code> (required, string): mail.tm token for the temporary email account (e.g., "xyz123").</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/tmail/cmail?token=xyz123"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "success": true,
+  "data": [
+    {
+      "id": "msg123",
+      "from": "sender@example.com",
+      "subject": "Welcome to Our Service",
+      "content": "Thank you for signing up! Click here [https://example.com] to verify your account."
+    }
+  ],
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/tmail/cmail?token=xyz123" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It
+        </a>
+      </div>
+      <!-- /yt/dl Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/yt/dl</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Fetches YouTube video details and a download link using the YouTube Data API and Clipto API.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/yt/dl?url={youtubeUrl}</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>url</code> (required, string): YouTube video URL (e.g., "https://www.youtube.com/watch?v=dQw4w9WgXcQ").</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/yt/dl?url=https://www.youtube.com/watch?v=dQw4w9WgXcQ"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackzs",
+  "title": "Rick Astley - Never Gonna Give You Up",
+  "channel": "RickAstleyVEVO",
+  "description": "Official music video for Never Gonna Give You Up by Rick Astley",
+  "thumbnail": "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+  "thumbnail_url": "https://img.youtube.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+  "url": "https://www.clipto.com/video.mp4",
+  "duration": "3m 32s",
+  "views": "1000000000",
+  "likes": "10000000",
+  "comments": "500000"
+}
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/yt/dl?url=https://www.youtube.com/watch?v=dQw4w9WgXcQ" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It
+        </a>
+      </div>
+	  <!-- /user/info Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/user/info</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Retrieves information about a Telegram user, bot, channel, or group, including ID, name, status, data center location, account age (for users), and member count (for chats).</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/user/info?username={username}</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>username</code> (required, string): Telegram username, user ID, or link (e.g., "@ISmartCoder", "TheSmartDev", "t.me/abirxdhackz").</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request (User):</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/user/info?username=ISmartCoder"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response (User):</strong></p>
+        <pre class="code-block"><code>
+{
+  "success": true,
+  "type": "user",
+  "id": 123456789,
+  "first_name": "Abir",
+  "last_name": "Chawdhury",
+  "username": "@ISmartCoder",
+  "dc_id": 1,
+  "dc_location": "MIA, Miami, USA, US",
+  "is_premium": false,
+  "is_verified": false,
+  "is_bot": false,
+  "flags": "Clean",
+  "status": "Online",
+  "account_created": "August 01, 2018",
+  "account_age": "7 years, 0 months, 8 days",
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz",
+  "links": {
+    "android": "tg://openmessage?user_id=123456789",
+    "ios": "tg://user?id=123456789",
+    "permanent": "tg://user?id=123456789"
+  }
+}
+        </code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Request (Channel):</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/user/info?username=TheSmartDev"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response (Channel):</strong></p>
+        <pre class="code-block"><code>
+{
+  "success": true,
+  "type": "channel",
+  "id": -100123456789,
+  "title": "TheSmartDev Updates",
+  "username": "@TheSmartDev",
+  "dc_id": 2,
+  "dc_location": "AMS, Amsterdam, Netherlands, NL",
+  "members_count": 1000,
+  "description": "Updates for A360API and other projects by @ISmartCoder",
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz",
+  "links": {
+    "join": "t.me/abirxdhackz",
+    "permanent": "t.me/abirxdhackz"
+  }
+}
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/user/info?username=ISmartCoder" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It
+        </a>
+      </div>
+      <!-- /tgusers Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/tgusers</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Retrieves information about a Telegram bot's associated chats (groups/channels) and users, including bot info, chat details (ID, title, type, members count), and user details (ID, name, premium status).</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/tgusers?token={token}</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>token</code> (required, string): Telegram bot token (e.g., "123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11").</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/tgusers?token=123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "bot_info": {
+    "first_name": "SmartBot",
+    "id": 123456789,
+    "username": "@SmartBot"
+  },
+  "chats": [
+    {
+      "id": -100123456789,
+      "members_count": 1000,
+      "title": "TheSmartDev Updates",
+      "type": "channel",
+      "username": "@TheSmartDev"
+    }
+  ],
+  "users": [
+    {
+      "id": 987654321,
+      "first_name": "Abir",
+      "last_name": "Chawdhury",
+      "username": "@ISmartCoder",
+      "is_premium": false
+    }
+  ],
+  "total_chats": 1,
+  "total_users": 1,
+  "processing_time": 5.123,
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/tgusers?token=123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It
+        </a>
+      </div>
+	  <!-- /imgai/analysis Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/imgai/analysis</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Analyzes a base64-encoded image using the Google Gemini API, providing a description based on a specified prompt.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> POST</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/imgai/analysis</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Body Parameters (JSON):</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>code</code> (required, string): Base64-encoded image data.</li>
+          <li><code>mimeType</code> (optional, string): Image MIME type (e.g., "image/jpeg", "image/png"). Default: "image/jpeg".</li>
+          <li><code>prompt</code> (optional, string): Analysis prompt. Default: "Describe The Image Properly".</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>
+curl -X POST "https://web-production-28e2a.up.railway.app/imgai/analysis" \
+     -H "Content-Type: application/json" \
+     -d '{"code": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==", "mimeType": "image/png", "prompt": "Describe this image"}'
+        </code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "success": true,
+  "analysis": "The image is a single-pixel red image (1x1 pixel).",
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Note:</strong> The example uses a 1x1 pixel image for brevity. To test with a real image, encode it to base64 using a tool like <code>base64</code> command or an online encoder.</p>
+        <a href="https://web-production-28e2a.up.railway.app/docs" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It (via API Docs)
+        </a>
+      </div>
+      <!-- /imgai/ocr Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/imgai/ocr</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Extracts all visible text from a base64-encoded image in any language using the Google Gemini API.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> POST</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/imgai/ocr</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Body Parameters (JSON):</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>code</code> (required, string): Base64-encoded image data.</li>
+          <li><code>mimeType</code> (optional, string): Image MIME type (e.g., "image/jpeg", "image/png"). Default: "image/jpeg".</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>
+curl -X POST "https://web-production-28e2a.up.railway.app/imgai/ocr" \
+     -H "Content-Type: application/json" \
+     -d '{"code": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==", "mimeType": "image/png"}'
+        </code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "success": true,
+  "text": "No visible text found in the image.",
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Note:</strong> The example uses a 1x1 pixel image for brevity. To test with a real image containing text, encode it to base64 using a tool like <code>base64</code> command or an online encoder.</p>
+        <a href="https://web-production-28e2a.up.railway.app/docs" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It (via API Docs)
+        </a>
+      </div>
+	  <!-- /ai/smartai Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/ai/smartai</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Generates a response to a prompt using an external SmartAI API.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/ai/smartai?prompt={prompt}</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>prompt</code> (required, string): The input text for the AI to respond to (e.g., "What is AI").</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/ai/smartai?prompt=What%20is%20AI"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "success": true,
+  "response": "AI stands for Artificial Intelligence, the simulation of human intelligence in machines.",
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/docs" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It (via API Docs)
+        </a>
+      </div>
+      <!-- /ai/gpt Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/ai/gpt</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Generates a response to a prompt using the OpenAI GPT-4o-mini model.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/ai/gpt?prompt={prompt}</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>prompt</code> (required, string): The input text for the AI to respond to (e.g., "What is AI").</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/ai/gpt?prompt=What%20is%20AI"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "success": true,
+  "response": "AI, or Artificial Intelligence, is the development of computer systems that can perform tasks requiring human intelligence, such as learning and decision-making.",
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Note:</strong> Requires a valid OpenAI API key. A 429 error may occur if the rate limit is exceeded.</p>
+        <a href="https://web-production-28e2a.up.railway.app/docs" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It (via API Docs)
+        </a>
+      </div>
+      <!-- /ai/gemi Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/ai/gemi</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Generates a response to a prompt using the Google Gemini 2.0-flash model.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/ai/gemi?prompt={prompt}</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>prompt</code> (required, string): The input text for the AI to respond to (e.g., "What is AI").</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/ai/gemi?prompt=What%20is%20AI"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "success": true,
+  "response": "AI, or Artificial Intelligence, refers to the development of computer systems that can perform tasks typically requiring human intelligence, such as learning and problem-solving.",
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/docs" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It (via API Docs)
+        </a>
+      </div>
+      <!-- /ai/dep Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/ai/dep</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Generates a short response to a prompt using the Groq DeepSeek-r1-distill-llama-70b model.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/ai/dep?prompt={prompt}</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>prompt</code> (required, string): The input text for the AI to respond to (e.g., "What is AI").</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/ai/dep?prompt=What%20is%20AI"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "success": true,
+  "response": "AI is artificial intelligence, mimicking human intelligence.",
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Note:</strong> A 404 error may occur if the DeepSeek model is unsupported or the endpoint is incorrect. Verify the Groq API configuration.</p>
+        <a href="https://web-production-28e2a.up.railway.app/docs" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It (via API Docs)
+        </a>
+      </div>
+      <!-- /ai/cla Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/ai/cla</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Generates a response to a prompt using the Anthropic Claude 3.7-sonnet model via Replicate.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/ai/cla?prompt={prompt}</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>prompt</code> (required, string): The input text for the AI to respond to (e.g., "What is AI").</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/ai/cla?prompt=What%20is%20AI"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "success": true,
+  "response": "AI, or Artificial Intelligence, is the field of computer science focused on creating systems that can perform tasks requiring human intelligence, such as learning and reasoning.",
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/docs" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It (via API Docs)
+        </a>
+      </div>
+	  <!-- /ph/enh Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/ph/enh</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Enhances a base64-encoded image by upscaling it 4x (width and height) using the upscalepics.com API, improving quality and face details. Dimensions can be auto-detected or specified.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> POST</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/ph/enh</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Body Parameters (JSON):</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>code</code> (required, string): Base64-encoded image data.</li>
+          <li><code>width</code> (optional, integer): Original image width (auto-detected if omitted).</li>
+          <li><code>height</code> (optional, integer): Original image height (auto-detected if omitted).</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>
+curl -X POST "https://web-production-28e2a.up.railway.app/ph/enh" \
+     -H "Content-Type: application/json" \
+     -d '{"code": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg=="}'
+        </code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "success": true,
+  "enhanced_image": "iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAABUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==",
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Note:</strong> The example uses a 1x1 pixel image for brevity. To test with a real image, encode it to base64 using a tool like <code>base64</code> command or an online encoder. The enhanced image is returned as a base64 string.</p>
+        <a href="https://web-production-28e2a.up.railway.app/docs" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It (via API Docs)
+        </a>
+      </div>
+      <!-- /yt/search Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/yt/search</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Searches for YouTube videos using the YouTube Data API, returning up to 10 results.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/yt/search?query={searchTerm}</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>query</code> (required, string): Search term (e.g., "python tutorial").</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/yt/search?query=python+tutorial"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackzs",
+  "result": [
+    {
+      "title": "Python Tutorial for Beginners",
+      "channel": "TechWorld",
+      "imageUrl": "https://i.ytimg.com/vi/abc123/hqdefault.jpg",
+      "link": "https://youtube.com/watch?v=abc123",
+      "duration": "25m 10s",
+      "views": "1000000",
+      "likes": "50000",
+      "comments": "2000"
+    }
+  ]
+}
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/yt/search?query=python+tutorial" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It
+        </a>
+      </div>
+      <!-- /fb/dl Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/fb/dl</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Fetches download links for public Facebook videos using multiple sources (Experts Tool, Savef.app, FDown.net).</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/fb/dl?url={facebookUrl}</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>url</code> (required, string): Public Facebook video URL.</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/fb/dl?url=https://www.facebook.com/video/123456789"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "links": [
+    {"quality": "HD", "url": "https://cdn.example.com/video.mp4"},
+    {"quality": "SD", "url": "https://cdn.example.com/video_sd.mp4"}
+  ],
+  "title": "Sample Video",
+  "thumbnail": "https://cdn.example.com/thumbnail.jpg",
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/fb/dl?url=https://www.facebook.com/video/123456789" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It
+        </a>
+      </div>
+      <!-- /cpn Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/cpn</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Scrapes coupon codes for a specified store from Dealspotr.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/cpn?site={storeSlug}</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>site</code> (required, string): Store slug or URL (e.g., "amazon").</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/cpn?site=amazon"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "store": "amazon",
+  "time_taken": "0.45 seconds",
+  "total": 2,
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz",
+  "api": "SmartDev Coupon Scraper",
+  "results": [
+    {"code": "SAVE10", "title": "10% off your purchase"},
+    {"code": "FREESHIP", "title": "Free shipping on orders over $50"}
+  ]
+}
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/cpn?site=amazon" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It
+        </a>
+      </div>
+<!-- /thrd/thd Endpoint -->
+<div class="endpoint-card">
+  <h3 class="text-2xl font-bold stylish-text mb-4">/thrd/thd</h3>
+  <p class="text-base stylish-text mb-2"><strong>Description:</strong> Fetches download and metadata information for Threads posts using an external Threads Photo Downloader API. Returns media links and post details.</p>
+  <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+  <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/thrd/thd?url={threadsUrl}</code></p>
+  <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+  <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+    <li><code>url</code> (required, string): Threads post URL.</li>
+  </ul>
+  <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+  <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/thrd/thd?url=https://www.threads.net/post/123456789"</code></pre>
+  <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+  <pre class="code-block"><code>
+{
+  "input_url": "https://www.threads.net/post/123456789",
+  "time_taken": "0.17 seconds",
+  "api_owner": "@abirxdhack",
+  "api_updates": "t.me/abirxdhackz",
+  "api": "abirxdhack Threads Scraper",
+  "results": {
+    "media_url": "https://cdn.example.com/thread-video.mp4",
+    "type": "video",
+    "username": "exampleuser",
+    "caption": "Check out this post!",
+    "cover": "https://cdn.example.com/thread-thumb.jpg"
+  }
+}
+  </code></pre>
+  <a href="https://web-production-28e2a.up.railway.app/thrd/thd?url=https://www.threads.net/post/123456789" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+    <i class="fas fa-play mr-2"></i> Try It
+  </a>
+</div>
+
+<!-- /thrd/twit Endpoint -->
+<div class="endpoint-card">
+  <h3 class="text-2xl font-bold stylish-text mb-4">/thrd/twit</h3>
+  <p class="text-base stylish-text mb-2"><strong>Description:</strong> Fetches download links and metadata for Twitter/X videos and images using TwitSave scraping. Returns media URLs, post title, and thumbnail.</p>
+  <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+  <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/thrd/twit?url={twitterUrl}</code></p>
+  <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+  <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+    <li><code>url</code> (required, string): Twitter/X post URL.</li>
+  </ul>
+  <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+  <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/thrd/twit?url=https://twitter.com/i/status/123456789"</code></pre>
+  <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+  <pre class="code-block"><code>
+{
+  "input_url": "https://twitter.com/i/status/123456789",
+  "time_taken": "0.13 seconds",
+  "api_owner": "@abirxdhack",
+  "api_updates": "t.me/abirxdhackz",
+  "api": "abirxdhack Twitter Scraper",
+  "results": {
+    "video_urls": [
+      "https://cdn.example.com/twitter-video-720p.mp4",
+      "https://cdn.example.com/twitter-video-480p.mp4"
+    ],
+    "title": "Amazing Video Post",
+    "thumbnail_urls": [
+      "https://cdn.example.com/twitter-thumb.jpg"
+    ]
+  }
+}
+  </code></pre>
+  <a href="https://web-production-28e2a.up.railway.app/thrd/twit?url=https://twitter.com/i/status/123456789" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+    <i class="fas fa-play mr-2"></i> Try It
+  </a>
+</div>
+      <!-- /pnt/dl Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/pnt/dl</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Fetches download links for Pinterest media (images or videos) using the SavePin API.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/pnt/dl?url={pinterestUrl}</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>url</code> (required, string): Pinterest pin URL.</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/pnt/dl?url=https://www.pinterest.com/pin/123456789"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "status": "success",
+  "input_url": "https://www.pinterest.com/pin/123456789",
+  "title": "Sample Pin",
+  "media": [
+    {
+      "quality": "High",
+      "url": "https://cdn.example.com/image.jpg",
+      "type": "image/jpeg"
+    }
+  ],
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/pnt/dl?url=https://www.pinterest.com/pin/123456789" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It
+        </a>
+      </div>
+      <!-- /insta/dl Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/insta/dl</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Fetches download links for Instagram media (Post, Reel, Carousel) using the FastDL API.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/insta/dl?url={instagramUrl}</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>url</code> (required, string): Instagram post, reel, or carousel URL.</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/insta/dl?url=https://www.instagram.com/p/123456789"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "status": "success",
+  "media_count": 1,
+  "results": [
+    {
+      "type": "video",
+      "thumbnail": "https://cdn.example.com/thumbnail.jpg",
+      "downloadLink": "https://cdn.example.com/video.mp4",
+      "filename": "video_1.mp4"
+    }
+  ],
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/insta/dl?url=https://www.instagram.com/p/123456789" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It
+        </a>
+      </div>
+<!-- /sp/dl Endpoint -->
+<div class="endpoint-card">
+  <h3 class="text-2xl font-bold stylish-text mb-4">/sp/dl</h3>
+  <p class="text-base stylish-text mb-2"><strong>Description:</strong> Retrieves downloadable links and metadata for a Spotify track using an external API (spotdl.io). Provides track name, artists, album image, duration, explicit status, and download URL.</p>
+  <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+  <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/sp/dl?url={url}</code></p>
+  <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+  <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+    <li><code>url</code> (required, string): Spotify track URL (e.g., "https://open.spotify.com/track/3awyoyNZNP1g3X8xa2tMoV").</li>
+  </ul>
+  <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+  <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/sp/dl?url=https://open.spotify.com/track/3awyoyNZNP1g3X8xa2tMoV"</code></pre>
+  <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+  <pre class="code-block"><code>
+{
+  "name": "Tum Hi Ho",
+  "artists": ["Mithoon", "Arijit Singh"],
+  "album_image": "https://i.scdn.co/image/ab67616d0000b2736404721c1943d5069f0805f3",
+  "duration_seconds": 261,
+  "explicit": false,
+  "download_url": "https://dl.spotdl.io/get?token=xyz123...",
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+  </code></pre>
+  <p class="text-base stylish-text mb-2"><strong>Note:</strong> The endpoint relies on an external API (spotdl.io). Ensure the Spotify track URL is valid and accessible. Test with a real Spotify track URL for actual results.</p>
+  <a href="https://web-production-28e2a.up.railway.app/docs" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+    <i class="fas fa-play mr-2"></i> Try It (via API Docs)
+  </a>
+</div>
+
+<!-- /sp/search Endpoint -->
+<div class="endpoint-card">
+  <h3 class="text-2xl font-bold stylish-text mb-4">/sp/search</h3>
+  <p class="text-base stylish-text mb-2"><strong>Description:</strong> Searches for Spotify tracks based on a query string, returning a list of tracks with title, artist, duration, ID, track URL, cover art, and release date. Uses the Spotify API for search functionality.</p>
+  <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+  <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/sp/search?q={query}&limit={limit}&offset={offset}</code></p>
+  <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+  <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+    <li><code>q</code> (required, string): Search query (e.g., "Tum Hi Ho").</li>
+    <li><code>limit</code> (optional, integer, default=30): Number of tracks to return (max 100).</li>
+    <li><code>offset</code> (optional, integer, default=0): Offset for pagination.</li>
+  </ul>
+  <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+  <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/sp/search?q=Tum+Hi+Ho&limit=4&offset=0"</code></pre>
+  <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+  <pre class="code-block"><code>
+{
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz",
+  "tracks": [
+    {
+      "Title": "Tum Hi Ho",
+      "Artist": "Mithoon, Arijit Singh",
+      "Duration": "4:21",
+      "Id": 1,
+      "TrackURL": "https://open.spotify.com/track/56zZ48jdyY2oDXHVnwg5Di",
+      "Cover_Art": "https://i.scdn.co/image/ab67616d0000b2736404721c1943d5069f0805f3",
+      "Release Date": "2013-04-06"
+    },
+    {
+      "Title": "Tum Hi Ho Bandhu",
+      "Artist": "Pritam, Neeraj Shridhar, Kavita Seth, Irshad Kamil",
+      "Duration": "4:43",
+      "Id": 2,
+      "TrackURL": "https://open.spotify.com/track/7H3mfOvtPNA8YDF3EdKy0L",
+      "Cover_Art": "https://i.scdn.co/image/ab67616d0000b273ad204486839062991becfbc9",
+      "Release Date": "2012-06-15"
+    },
+    {
+      "Title": "Tamak Pata",
+      "Artist": "Ashes Bangladesh",
+      "Duration": "5:03",
+      "Id": 3,
+      "TrackURL": "https://open.spotify.com/track/1lQOAnYxVJIE0FpYpKrlHe",
+      "Cover_Art": "https://i.scdn.co/image/ab67616d0000b273fef15000440ccac4f40b4e14",
+      "Release Date": "2024-04-21"
+    },
+    {
+      "Title": "Tum Hi Ho",
+      "Artist": "Aruna Arya Gupta, Mohammed Irfan",
+      "Duration": "4:34",
+      "Id": 4,
+      "TrackURL": "https://open.spotify.com/track/3bXAWyNQAFbLzCqLiubBbI",
+      "Cover_Art": "https://i.scdn.co/image/ab67616d0000b27367ec9c4c982bcc9577c89ec6",
+      "Release Date": "2025-05-23"
+    }
+  ]
+}
+  </code></pre>
+  <p class="text-base stylish-text mb-2"><strong>Note:</strong> The endpoint uses the Spotify API for searching tracks. Ensure the query is valid. The limit parameter is capped at 100 due to API restrictions. Test with a real query for actual results.</p>
+  <a href="https://web-production-28e2a.up.railway.app/docs" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+    <i class="fas fa-play mr-2"></i> Try It (via API Docs)
+  </a>
+</div>
+      <!-- /tr Endpoint -->
+      <div class="endpoint-card">
+        <h3 class="text-2xl font-bold stylish-text mb-4">/tr</h3>
+        <p class="text-base stylish-text mb-2"><strong>Description:</strong> Translates text into a specified language using Google's translation engine via <code>googletrans</code>.</p>
+        <p class="text-base stylish-text mb-2"><strong>Method:</strong> GET</p>
+        <p class="text-base stylish-text mb-2"><strong>Endpoint:</strong> <code>/tr?text={text}&lang={languageCode}</code></p>
+        <p class="text-base stylish-text mb-2"><strong>Parameters:</strong></p>
+        <ul class="list-disc list-inside ml-4 text-base stylish-text mb-2">
+          <li><code>text</code> (required, string): Text to translate (e.g., "Hello").</li>
+          <li><code>lang</code> (optional, string): ISO 639-1 language code (e.g., "es"). Default: "en".</li>
+        </ul>
+        <p class="text-base stylish-text mb-2"><strong>Example Request:</strong></p>
+        <pre class="code-block"><code>curl -X GET "https://web-production-28e2a.up.railway.app/tr?text=Hello&lang=es"</code></pre>
+        <p class="text-base stylish-text mb-2"><strong>Example Response:</strong></p>
+        <pre class="code-block"><code>
+{
+  "translated_text": "Hola",
+  "api_owner": "@ISmartCoder",
+  "api_updates": "t.me/abirxdhackz"
+}
+        </code></pre>
+        <a href="https://web-production-28e2a.up.railway.app/tr?text=Hello&lang=es" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl mt-4 stylish-text">
+          <i class="fas fa-play mr-2"></i> Try It
+        </a>
+      </div>
+    </div>
+  </section>
+  <!-- How A360 API Built Section -->
+  <section class="section-card max-w-5xl mx-auto text-center">
+    <h2 class="text-3xl sm:text-4xl font-semibold mb-6 sm:mb-8 glow stylish-text">How A360 API Was Built?</h2>
+    <div class="build-card p-4 sm:p-5 rounded-xl">
+      <p class="text-base sm:text-lg stylish-text">A360 API was meticulously crafted from scratch by Abir Arafat Chawdhury (@ISmartCoder) using Python and FastAPI. The project began as a vision to consolidate diverse tools into a single, powerful API. Each endpoint leverages external APIs and libraries like <code>smartfaker</code>, <code>smartbindb</code>, <code>googletrans</code>, and <code>cloudscraper</code>, ensuring robust functionality. The modular plugin architecture allows for easy expansion, with each plugin (<code>ccgen.py</code>, <code>fake.py</code>, etc.) handling specific tasks. Built over months of dedication, A360 API is a testament to innovation and developer empowerment.</p>
+    </div>
+  </section>
+  <!-- Owner Section -->
+  <section class="section-card max-w-5xl mx-auto text-center">
+    <h2 class="text-3xl sm:text-4xl font-semibold mb-6 sm:mb-8 glow stylish-text">Owner of A360 API</h2>
+    <div class="owner-card p-4 sm:p-5 rounded-xl">
+      <p class="text-base sm:text-lg stylish-text">Abir Arafat Chawdhury, a visionary entrepreneur and tech enthusiast, is the CEO and founder of the Abir X Official Community. As a skilled coder and freelancer on platforms like Upwork and Fiverr, Abir crafts innovative web projects and brings clients' visions to life. His passion for coding drives the creation of smarter, cutting-edge solutions like A360 API, redefining the digital landscape.</p>
+    </div>
+    <a href="https://t.me/ISmartCoder" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 sm:py-3 sm:px-6 rounded-xl mt-4 sm:mt-6 stylish-text">
+      <i class="fab fa-telegram mr-2 text-lg sm:text-xl"></i> Contact @ISmartCoder
+    </a>
+  </section>
+  <!-- Abir's Best Projects Section -->
+  <section class="section-card max-w-5xl mx-auto text-center">
+    <h2 class="text-3xl sm:text-4xl font-semibold mb-6 sm:mb-8 glow stylish-text">Abir Arafat Chawdhury's Best Projects</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="project-card">
+        <i class="fab fa-github text-4xl mb-4 text-blue-600"></i>
+        <h3 class="text-xl font-bold stylish-text mb-2">SmartUserExport</h3>
+        <p class="text-base stylish-text mb-4">A FastAPI Telegram bot extractor using Telethon for efficient, low-memory data retrieval from users, groups, and channels.</p>
+        <a href="https://github.com/abirxdhack/SmartUserExport" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl stylish-text">
+          <i class="fab fa-github mr-2 text-lg"></i> View on GitHub
+        </a>
+      </div>
+      <div class="project-card">
+        <i class="fab fa-github text-4xl mb-4 text-blue-600"></i>
+        <h3 class="text-xl font-bold stylish-text mb-2">SmartUtilFork</h3>
+        <p class="text-base stylish-text mb-4">A fork of SmartUtilBot, rewritten in Pyrofork with updated plugins and modules for enhanced functionality.</p>
+        <a href="https://github.com/TheSmartDevs/SmartUtilFork" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl stylish-text">
+          <i class="fab fa-github mr-2 text-lg"></i> View on GitHub
+        </a>
+      </div>
+      <div class="project-card">
+        <i class="fab fa-github text-4xl mb-4 text-blue-600"></i>
+        <h3 class="text-xl font-bold stylish-text mb-2">SmartBinanceP2P</h3>
+        <p class="text-base stylish-text mb-4">A fast, free API for Binance P2P trading, accessible without a 2000 USDT balance or merchant status.</p>
+        <a href="https://github.com/TheSmartDevs/SmartBinanceP2P" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 rounded-xl stylish-text">
+          <i class="fab fa-github mr-2 text-lg"></i> View on GitHub
+        </a>
+      </div>
+    </div>
+  </section>
+  <!-- Open Source Section -->
+  <section class="section-card max-w-5xl mx-auto text-center">
+<h2 class="text-3xl sm:text-4xl font-semibold mb-6 sm:mb-8 glow stylish-text">Open Source Contributions</h2>
+    <p class="mb-4 sm:mb-6 text-base sm:text-lg stylish-text">A360 API is an open-source project, and contributions are welcome! Fork the repository, submit pull requests, and collaborate with @ISmartCoder to enhance the API. Valid contributions will be merged promptly.</p>
+    <a href="https://github.com/abirxdhack/A360API" target="_blank" class="inline-flex items-center btn-glow font-bold py-2 px-4 sm:py-3 sm:px-6 rounded-xl stylish-text">
+      <i class="fab fa-github mr-2 text-lg sm:text-xl"></i> Source Code
+    </a>
+  </section>
+  <!-- Footer Section -->
+  <footer class="bg-gradient-to-r from-gray-100 to-gray-200 py-6 sm:py-8 mt-auto">
+    <div class="max-w-5xl mx-auto text-center">
+      <h3 class="text-2xl sm:text-3xl font-semibold mb-4 sm:mb-6 glow stylish-text">Connect with A360 API</h3>
+      <div class="flex justify-center space-x-4 sm:space-x-8 flex-wrap">
+        <a href="https://facebook.com/abirxdhackz" target="_blank" class="hover:text-blue-600 transition-transform transform hover:scale-125"><i class="fab fa-facebook-f text-2xl sm:text-3xl"></i></a>
+        <a href="https://instagram.com/abirxdhackz" target="_blank" class="hover:text-blue-600 transition-transform transform hover:scale-125"><i class="fab fa-instagram text-2xl sm:text-3xl"></i></a>
+        <a href="https://x.com/abirxdhackz" target="_blank" class="hover:text-blue-600 transition-transform transform hover:scale-125"><i class="fab fa-x-twitter text-2xl sm:text-3xl"></i></a>
+        <a href="https://github.com/abirxdhack" target="_blank" class="hover:text-blue-600 transition-transform transform hover:scale-125"><i class="fab fa-github text-2xl sm:text-3xl"></i></a>
+        <a href="https://youtube.com/@abirxdhackz" target="_blank" class="hover:text-blue-600 transition-transform transform hover:scale-125"><i class="fab fa-youtube text-2xl sm:text-3xl"></i></a>
+        <a href="https://t.me/ISmartCoder" target="_blank" class="hover:text-blue-600 transition-transform transform hover:scale-125"><i class="fab fa-telegram text-2xl sm:text-3xl"></i></a>
+        <a href="https://python.org" target="_blank" class="hover:text-blue-600 transition-transform transform hover:scale-125"><i class="fab fa-python text-2xl sm:text-3xl"></i></a>
+      </div>
+      <p class="mt-4 sm:mt-6 text-base sm:text-lg stylish-text">© 2025 A360 API. All rights reserved.</p>
+      <p class="text-sm stylish-text">Developed by <a href="https://t.me/ISmartCoder" target="_blank" class="text-blue-600 hover:underline">@ISmartCoder</a> | Updates: <a href="https://t.me/abirxdhackz" target="_blank" class="text-blue-600 hover:underline">t.me/abirxdhackz</a></p>
+    </div>
+  </footer>
+  <script>
+    // Three.js Particle Background
+    const canvas = document.getElementById('three-canvas');
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ canvas, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.position.z = 5;
+    const particles = new THREE.Group();
+    for (let i = 0; i < 200; i++) {
+      const geometry = new THREE.SphereGeometry(0.02, 16, 16);
+      const material = new THREE.MeshBasicMaterial({ color: 0x3b82f6 });
+      const particle = new THREE.Mesh(geometry, material);
+      particle.position.set(
+        (Math.random() - 0.5) * 10,
+        (Math.random() - 0.5) * 10,
+        (Math.random() - 0.5) * 10
+      );
+      particles.add(particle);
+    }
+    scene.add(particles);
+    function animate() {
+      requestAnimationFrame(animate);
+      particles.rotation.y += 0.002;
+      renderer.render(scene, camera);
+    }
+    animate();
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
+</html>
