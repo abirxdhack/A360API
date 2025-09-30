@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <meta name="description" content="A360 API Health: Check the status and statistics of the API.">
+    <meta name="keywords" content="A360 API, health, statistics, uptime, endpoints, plugins">
+    <meta name="author" content="Abir Arafat Chawdhury (@ISmartCoder)">
+    <title>A360API - Health Status</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            color: #1f2937;
+            overflow-x: hidden;
+            overflow-y: auto;
+            margin: 0;
+            background: linear-gradient(135deg, #f9fafb, #d1d5db);
+            animation: bgAnimation 10s infinite ease-in-out;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        @keyframes bgAnimation {
+            0% { background-position: 0% 0%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 0%; }
+        }
+        #three-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.5;
+            will-change: transform;
+        }
+        .section-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 1rem;
+            padding: 0.75rem;
+            margin: 0.5rem auto;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            max-width: 95vw;
+        }
+        @media (min-width: 640px) {
+            .section-card {
+                padding: 1.5rem;
+                margin: 1rem auto;
+                max-width: 80vw;
+            }
+            .section-card:hover {
+                transform: translateY(-10px);
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            }
+        }
+        .logo {
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #1f2937;
+            box-shadow: 0 0 15px rgba(31, 41, 55, 0.4);
+            width: 24vw;
+            height: 24vw;
+            max-width: 100px;
+            max-height: 100px;
+            margin: 0 auto;
+        }
+        @media (min-width: 640px) {
+            .logo {
+                width: 32vw;
+                height: 32vw;
+                max-width: 140px;
+                max-height: 140px;
+            }
+            @media (min-width: 768px) {
+                .logo {
+                    max-width: 180px;
+                    max-height: 180px;
+                }
+            }
+        }
+        .glow {
+            font-family: 'Poppins', sans-serif;
+            text-shadow: 0 0 8px rgba(31, 41, 55, 0.6), 0 0 16px rgba(31, 41, 55, 0.4);
+        }
+        .stylish-text {
+            font-family: 'Poppins', sans-serif;
+            letter-spacing: 0.5px;
+            color: #1f2937;
+        }
+        .btn-glow {
+            background: linear-gradient(90deg, #1f2937, #4b5563);
+            color: #ffffff;
+            transition: all 0.3s ease;
+            padding: 0.5rem 1rem;
+            border-radius: 0.75rem;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 5px rgba(31, 41, 55, 0.3);
+        }
+        @media (min-width: 640px) {
+            .btn-glow {
+                padding: 0.75rem 1.5rem;
+                font-size: 1rem;
+            }
+            .btn-glow:hover {
+                box-shadow: 0 0 15px rgba(31, 41, 55, 0.6);
+                transform: scale(1.05);
+                background: linear-gradient(90deg, #111827, #374151);
+            }
+        }
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: #10b981;
+            text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+        }
+        @media (min-width: 640px) {
+            .status-indicator {
+                font-size: 1rem;
+            }
+        }
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #10b981;
+            animation: pulse 2.5s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .stats-card {
+            background: linear-gradient(135deg, #ffffff, #e5e7eb);
+            border: 1px solid #1f2937;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            text-align: center;
+            max-width: 95vw;
+            margin: 0.5rem auto;
+        }
+        @media (min-width: 640px) {
+            .stats-card {
+                padding: 1.5rem;
+                max-width: 80vw;
+            }
+            .stats-card:hover {
+                transform: scale(1.03);
+                box-shadow: 0 6px 15px rgba(31, 41, 55, 0.2);
+            }
+        }
+        main {
+            flex: 1;
+        }
+        .error {
+            color: #ef4444;
+        }
+        .loading {
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div id="three-canvas"></div>
+    <main>
+        <header class="text-center py-6 sm:py-12 relative">
+            <img src="https://i.ibb.co/cXKbHb7K/photo-2025-08-09-10-06-41.jpg" alt="A360 API Logo" class="mx-auto w-32 h-32 sm:w-40 sm:h-40 md:w-56 md:h-56 logo">
+            <div class="flex items-center justify-center mt-4 sm:mt-6">
+                <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold glow stylish-text mr-4">Abir 360 <i>API</i></h1>
+                <span class="inline-block w-10 h-10">
+                    <svg class="w-full h-full" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="12" cy="12" r="10" fill="#28a745" stroke="#ffffff" stroke-width="2"/>
+                        <path d="M9 12.5L11 15L15 9" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                </span>
+            </div>
+            <p class="welcome-message mt-2 sm:mt-3 tracking-wide stylish-text text-lg sm:text-xl leading-relaxed">
+                Check the <i>Health</i> of the API Toolkit: Empowering developers with tools for <b>media downloading</b>, <i>translation</i>, <b>coupon scraping</b>, <i>P2P trading</i>, and more. Built with <b>passion</b> by @ISmartCoder.
+            </p>
+            <div class="status-indicator mt-4 text-lg sm:text-xl stylish-text flex items-center justify-center">
+                <span class="status-dot mr-2"></span> API Status: <i id="apiHealth" class="loading">Loading...</i>
+            </div>
+        </header>
+        
+        <section class="section-card max-w-5xl mx-auto">
+            <h2 class="text-3xl sm:text-4xl font-semibold text-center mb-6 sm:mb-8 glow stylish-text">API Health Statistics</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="stats-card">
+                    <h3 class="text-xl font-semibold stylish-text">Uptime</h3>
+                    <p id="uptime" class="text-2xl mt-2 stylish-text loading">Loading...</p>
+                </div>
+                <div class="stats-card">
+                    <h3 class="text-xl font-semibold stylish-text">Total Endpoints</h3>
+                    <p id="totalEndpoints" class="text-2xl mt-2 stylish-text loading">Loading...</p>
+                </div>
+                <div class="stats-card">
+                    <h3 class="text-xl font-semibold stylish-text">Total Plugins</h3>
+                    <p id="totalPlugins" class="text-2xl mt-2 stylish-text loading">Loading...</p>
+                </div>
+                <div class="stats-card">
+                    <h3 class="text-xl font-semibold stylish-text">Last Checked</h3>
+                    <p id="lastChecked" class="text-2xl mt-2 stylish-text loading">Loading...</p>
+                </div>
+                <div class="stats-card">
+                    <h3 class="text-xl font-semibold stylish-text">API Version</h3>
+                    <p id="apiVersion" class="text-2xl mt-2 stylish-text loading">Loading...</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer Section -->
+    <footer class="bg-gradient-to-r from-gray-100 to-gray-200 py-6 sm:py-8 mt-auto">
+        <div class="max-w-5xl mx-auto text-center">
+            <h3 class="text-2xl sm:text-3xl font-semibold mb-4 sm:mb-6 glow stylish-text">Connect with A360 API</h3>
+            <div class="flex justify-center space-x-4 sm:space-x-8 flex-wrap">
+                <a href="https://facebook.com/abirxdhackz" target="_blank" class="hover:text-blue-600 transition-transform transform hover:scale-125"><i class="fab fa-facebook-f text-2xl sm:text-3xl"></i></a>
+                <a href="https://instagram.com/abirxdhackz" target="_blank" class="hover:text-blue-600 transition-transform transform hover:scale-125"><i class="fab fa-instagram text-2xl sm:text-3xl"></i></a>
+                <a href="https://x.com/abirxdhackz" target="_blank" class="hover:text-blue-600 transition-transform transform hover:scale-125"><i class="fab fa-x-twitter text-2xl sm:text-3xl"></i></a>
+                <a href="https://github.com/abirxdhack" target="_blank" class="hover:text-blue-600 transition-transform transform hover:scale-125"><i class="fab fa-github text-2xl sm:text-3xl"></i></a>
+                <a href="https://youtube.com/@abirxdhackz" target="_blank" class="hover:text-blue-600 transition-transform transform hover:scale-125"><i class="fab fa-youtube text-2xl sm:text-3xl"></i></a>
+                <a href="https://t.me/ISmartCoder" target="_blank" class="hover:text-blue-600 transition-transform transform hover:scale-125"><i class="fab fa-telegram text-2xl sm:text-3xl"></i></a>
+                <a href="https://python.org" target="_blank" class="hover:text-blue-600 transition-transform transform hover:scale-125"><i class="fab fa-python text-2xl sm:text-3xl"></i></a>
+            </div>
+            <p class="mt-4 sm:mt-6 text-base sm:text-lg stylish-text">© 2025 A360 API. All rights reserved.</p>
+            <p class="text-sm stylish-text">Developed by <a href="https://t.me/ISmartCoder" target="_blank" class="text-blue-600 hover:underline">@ISmartCoder</a> | Updates: <a href="https://t.me/TheSmartDev" target="_blank" class="text-blue-600 hover:underline">t.me/TheSmartDev</a></p>
+        </div>
+    </footer>
+
+    <script>
+        // Three.js Background Animation
+        let scene, camera, renderer;
+        function initThree() {
+            scene = new THREE.Scene();
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            renderer = new THREE.WebGLRenderer({ alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.getElementById('three-canvas').appendChild(renderer.domElement);
+            
+            const geometry = new THREE.BufferGeometry();
+            const vertices = [];
+            const count = 500;
+            for (let i = 0; i < count; i++) {
+                vertices.push(
+                    (Math.random() - 0.5) * 2000,
+                    (Math.random() - 0.5) * 2000,
+                    (Math.random() - 0.5) * 2000
+                );
+            }
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+            const material = new THREE.PointsMaterial({ color: 0x1f2937, size: 2 });
+            const points = new THREE.Points(geometry, material);
+            scene.add(points);
+            camera.position.z = 500;
+            animate();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            const points = scene.children[0];
+            if (points && points.geometry && points.geometry.attributes.position) {
+                const positions = points.geometry.attributes.position.array;
+                for (let i = 0; i < positions.length; i += 3) {
+                    positions[i + 2] += Math.sin(Date.now() * 0.0005 + i) * 0.1;
+                }
+                points.geometry.attributes.position.needsUpdate = true;
+            }
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Fetch Health Data from /api/health
+        async function fetchHealthData() {
+            try {
+                console.log('Fetching health data from /api/health...');
+                const response = await fetch('/api/health', {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status} - ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                console.log('Fetched health data:', data);
+                
+                // Update DOM elements with fetched data
+                updateElement('uptime', data['Api Uptime'] || data.uptime || 'N/A');
+                updateElement('totalEndpoints', data['Total Endpoints'] || data.endpoints || 'N/A');
+                updateElement('totalPlugins', data['Total Plugins'] || data.plugins || 'N/A');
+                updateElement('lastChecked', data['Last Checked'] || data.timestamp || new Date().toLocaleString());
+                updateElement('apiVersion', data['Api Version'] || data.version || 'N/A');
+                updateElement('apiHealth', data['Api Health'] || data.status || 'Unknown');
+                
+                // Update status indicator based on health
+                const healthStatus = data['Api Health'] || data.status || 'Unknown';
+                const statusElement = document.getElementById('apiHealth');
+                const statusDot = document.querySelector('.status-dot');
+                
+                if (healthStatus.toLowerCase() === 'healthy' || healthStatus.toLowerCase() === 'ok') {
+                    statusElement.style.color = '#10b981';
+                    statusDot.style.backgroundColor = '#10b981';
+                } else if (healthStatus.toLowerCase() === 'warning') {
+                    statusElement.style.color = '#f59e0b';
+                    statusDot.style.backgroundColor = '#f59e0b';
+                } else if (healthStatus.toLowerCase() === 'error' || healthStatus.toLowerCase() === 'unhealthy') {
+                    statusElement.style.color = '#ef4444';
+                    statusDot.style.backgroundColor = '#ef4444';
+                }
+                
+            } catch (error) {
+                console.error('Error fetching health data:', error);
+                
+                // Update all elements with error state
+                const errorElements = ['uptime', 'totalEndpoints', 'totalPlugins', 'lastChecked', 'apiVersion', 'apiHealth'];
+                errorElements.forEach(id => {
+                    const element = document.getElementById(id);
+                    element.textContent = 'Error';
+                    element.classList.remove('loading');
+                    element.classList.add('error');
+                });
+                
+                // Update status indicator for error
+                const statusDot = document.querySelector('.status-dot');
+                statusDot.style.backgroundColor = '#ef4444';
+                
+                // Show more specific error in console for debugging
+                console.error('Detailed error:', {
+                    message: error.message,
+                    name: error.name,
+                    stack: error.stack
+                });
+            }
+        }
+
+        function updateElement(id, value) {
+            const element = document.getElementById(id);
+            if (element) {
+                element.textContent = value;
+                element.classList.remove('loading', 'error');
+            }
+        }
+
+        // Initialize Three.js and start fetching data
+        document.addEventListener('DOMContentLoaded', function() {
+            initThree();
+            fetchHealthData();
+            
+            // Update health data every 30 seconds
+            setInterval(fetchHealthData, 30000);
+        });
+    </script>
+</body>
+</html>
