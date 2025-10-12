@@ -1,11 +1,9 @@
-#Copyright @ISmartCoder
-#Updates Channel @TheSmartDev 
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 import cloudscraper
 from bs4 import BeautifulSoup
 import aiohttp
-import asyncio
+from utils import LOGGER
 
 router = APIRouter(prefix="/insta")
 
@@ -45,7 +43,6 @@ async def fetch_ytdownload_media(insta_url: str):
                 response_data = await api_response.json() if api_response.content else {}
                 if not response_data or 'data' not in response_data:
                     return None
-                
                 results = []
                 image_count = 1
                 video_count = 1
@@ -55,7 +52,6 @@ async def fetch_ytdownload_media(insta_url: str):
                         download_url = link.get('url')
                         if not download_url:
                             continue
-                        # Determine media type based on quality or URL
                         if 'mp4' in download_url.lower():
                             label = f"video{video_count}"
                             video_count += 1
@@ -77,17 +73,17 @@ async def fetch_ytdownload_media(insta_url: str):
 
 @router.get("/dl")
 async def download(url: str = ""):
-    if not url:
-        return JSONResponse(
-            status_code=400,
-            content={
-                "status": "error",
-                "error": "Missing 'url' parameter",
-                "api_owner": "@ISmartCoder",
-                "api_updates": "t.me/abirxdhackz"
-            }
-        )
     try:
+        if not url:
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "status": "error",
+                    "error": "Missing 'url' parameter",
+                    "api_owner": "@ISmartCoder",
+                    "api_updates": "t.me/abirxdhackz"
+                }
+            )
         media_list = await fetch_ytdownload_media(url)
         if not media_list:
             return JSONResponse(
@@ -109,6 +105,7 @@ async def download(url: str = ""):
             }
         )
     except Exception as e:
+        LOGGER.error(f"Server error: {str(e)}")
         return JSONResponse(
             status_code=500,
             content={
