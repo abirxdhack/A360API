@@ -26,6 +26,7 @@ async def fetch_ytdownload_media(insta_url: str):
                 'x-client': 'web'
             }
             async with session.get('https://ytdownload.in', headers=headers) as response:
+                response.raise_for_status()
                 text = await response.text()
                 cookies = {cookie.key: cookie.value for cookie in response.cookies}
             BeautifulSoup(text, 'html.parser')
@@ -41,29 +42,35 @@ async def fetch_ytdownload_media(insta_url: str):
                 cookies=cookies
             ) as api_response:
                 response_data = await api_response.json() if api_response.content else {}
-                if not response_data or 'data' not in response_data:
+                if not response_data or 'responseFinal' not in response_data:
                     return None
                 results = []
                 image_count = 1
                 video_count = 1
-                if 'data' in response_data and 'links' in response_data['data']:
-                    for link in response_data['data']['links']:
-                        quality = link.get('quality', 'Unknown')
-                        download_url = link.get('url')
-                        if not download_url:
-                            continue
-                        if 'mp4' in download_url.lower():
-                            label = f"video{video_count}"
-                            video_count += 1
-                        else:
-                            label = f"image{image_count}"
-                            image_count += 1
-                        thumbnail = response_data['data'].get('thumbnail') if response_data['data'].get('thumbnail') else None
-                        results.append({
-                            "label": label,
-                            "thumbnail": thumbnail,
-                            "download": download_url
-                        })
+                response_final = response_data['responseFinal']
+                thumbnail = response_final.get('thumbnails') if response_final.get('thumbnails') else None
+                if response_final.get('videoUrl'):
+                    label = f"video{video_count}"
+                    video_count += 1
+                    results.append({
+                        "label": label,
+                        "thumbnail": thumbnail,
+                        "download": response_final['videoUrl']
+                    })
+                if response_final.get('formats'):
+                    for fmt in response_final['formats']:
+                        if fmt.get('url'):
+                            if 'mp4' in fmt['url'].lower():
+                                label = f"video{video_count}"
+                                video_count += 1
+                            else:
+                                label = f"image{image_count}"
+                                image_count += 1
+                            results.append({
+                                "label": label,
+                                "thumbnail": thumbnail,
+                                "download": fmt['url']
+                            })
                 if not results:
                     return None
                 return results
