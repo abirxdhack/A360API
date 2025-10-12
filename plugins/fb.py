@@ -4,150 +4,76 @@ from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 import cloudscraper
 from bs4 import BeautifulSoup
-import re
-from urllib.parse import urljoin
-import requests
-from utils import LOGGER
+import aiohttp
+import asyncio
 
 router = APIRouter(prefix="/fb")
 
-def get_experts_tool_links(fb_url):
+async def get_ytdownload_links(fb_url):
     try:
-        payload = {'url': fb_url}
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36'
-        }
-        response = requests.post('https://www.expertstool.com/converter.php', data=payload, headers=headers)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.text, 'html.parser')
-        downloads = {'links': [], 'thumbnail': None}
-        video_divs = soup.find_all('div', class_='col-md-8 col-md-offset-2')
-        for div in video_divs:
-            video_link = div.find('a', href=True, class_='btn btn-primary btn-sm btn-block', style='background-color: green;')
-            if video_link and 'Download VideO File' in video_link.text:
-                quality = 'SD' if '[SD]' in video_link.text else 'HD' if '[HD]' in video_link.text else 'Unknown'
-                downloads['links'].append({'quality': quality, 'url': video_link['href']})
-        image_divs = soup.find_all('div', class_='col-md-4 col-md-offset-4')
-        for div in image_divs:
-            image_link = div.find('a', href=True, class_='btn btn-primary btn-sm btn-block')
-            if image_link and 'Download image' in image_link.text:
-                downloads['thumbnail'] = image_link['href']
-        if not downloads['links'] and not downloads['thumbnail']:
-            return {"error": "No downloadable content found from Experts Tool."}
-        return downloads
+        scraper = cloudscraper.create_scraper()
+        async with aiohttp.ClientSession() as session:
+            headers = {
+                'Accept': '*/*',
+                'Accept-Encoding': 'gzip, deflate, br, zstd',
+                'Accept-Language': 'en-US,en;q=0.9,bn;q=0.8',
+                'Connection': 'keep-alive',
+                'Content-Type': 'application/json',
+                'Origin': 'https://ytdownload.in',
+                'Referer': 'https://ytdownload.in/',
+                'User-Agent': 'Mozilla/5.0 (Linux; Android 6.0; Nexus 5 Build/MRA58N) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Mobile Safari/537.36 Edg/141.0.0.0',
+                'sec-ch-ua': '"Microsoft Edge";v="141", "Not?A_Brand";v="8", "Chromium";v="141"',
+                'sec-ch-ua-mobile': '?1',
+                'sec-ch-ua-platform': '"Android"',
+                'x-client': 'web'
+            }
+            async with session.get('https://ytdownload.in', headers=headers) as response:
+                text = await response.text()
+                cookies = {cookie.key: cookie.value for cookie in response.cookies}
+            BeautifulSoup(text, 'html.parser')
+            payload = {
+                'url': fb_url,
+                'format': 'mp4',
+                'quality': '1080p'
+            }
+            async with session.post(
+                'https://ytdownload.in/api/allinonedownload',
+                json=payload,
+                headers=headers,
+                cookies=cookies
+            ) as api_response:
+                response_data = await api_response.json() if api_response.content else {}
+                if not response_data or 'data' not in response_data:
+                    return {"error": "No downloadable content found from ytdownload.in."}
+                
+                downloads = {'links': [], 'thumbnail': None, 'title': "Unknown Title"}
+                if 'data' in response_data and 'links' in response_data['data']:
+                    for link in response_data['data']['links']:
+                        quality = link.get('quality', 'Unknown')
+                        url = link.get('url')
+                        if url:
+                            downloads['links'].append({'quality': quality, 'url': url})
+                    if response_data['data'].get('thumbnail'):
+                        downloads['thumbnail'] = response_data['data']['thumbnail']
+                    if response_data['data'].get('title'):
+                        downloads['title'] = response_data['data']['title']
+                
+                if not downloads['links']:
+                    return {"error": "No downloadable video links found from ytdownload.in."}
+                return downloads
     except Exception as e:
-        LOGGER.error(f"Failed to fetch from Experts Tool: {str(e)}")
-        return {"error": f"Failed to fetch from Experts Tool: {str(e)}"}
-
-def get_savef_links(fb_url):
-    api_url = "https://savef.app/api/ajaxSearch"
-    payload = {
-        "p": "home",
-        "q": fb_url,
-        "lang": "en",
-        "web": "savef.app",
-        "v": "v2",
-        "w": ""
-    }
-    headers = {
-        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-        "Origin": "https://savef.app",
-        "Referer": "https://savef.app/",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
-    }
-    try:
-        response = requests.post(api_url, data=payload, headers=headers)
-        response.raise_for_status()
-        html_content = response.json().get("data", "")
-        soup = BeautifulSoup(html_content, "html.parser")
-        download_links = []
-        for link in soup.select("a.download-link-fb"):
-            quality = link.find_previous("td", class_="video-quality").text.strip()
-            normalized_quality = "HD" if "720p" in quality else "SD"
-            href = link["href"]
-            download_links.append({'quality': normalized_quality, 'url': href})
-        if not download_links:
-            return {"error": "No downloadable video links found from savef.app."}
-        return {
-            "links": download_links,
-            "title": "Unknown Title",
-            "thumbnail": "Not available"
-        }
-    except Exception as e:
-        LOGGER.error(f"Failed to fetch from savef.app: {str(e)}")
-        return {"error": f"Failed to fetch from savef.app: {str(e)}"}
-
-def get_fdown_links(fb_url):
-    try:
-        base_url = "https://fdown.net/"
-        session = cloudscraper.create_scraper()
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Referer': base_url,
-            'Connection': 'keep-alive',
-            'Upgrade-Insecure-Requests': '1',
-            'DNT': '1'
-        }
-        response = session.get(base_url, headers=headers, timeout=5)
-        response.raise_for_status()
-        form_data = {'URLz': fb_url}
-        action_url = urljoin(base_url, "download.php")
-        post_response = session.post(action_url, data=form_data, headers=headers, timeout=5)
-        post_response.raise_for_status()
-        soup = BeautifulSoup(post_response.text, 'html.parser')
-        error_div = soup.find('div', class_='alert-danger')
-        if error_div:
-            return {"error": "Unknown error from FDown.net"}
-        title = None
-        title_tag = soup.find('title')
-        if title_tag:
-            title = title_tag.get_text(strip=True)
-        else:
-            heading = soup.find(['h1', 'h2'])
-            if heading:
-                title = heading.get_text(strip=True)
-        if title and "FDown" in title:
-            title = title.replace(" - FDown", "").strip()
-        if not title:
-            title = "Unknown Title"
-        download_links = []
-        sd_link = soup.find('a', id='sdlink')
-        hd_link = soup.find('a', id='hdlink')
-        if sd_link and sd_link.get('href'):
-            download_links.append({'quality': 'SD', 'url': sd_link['href']})
-        if hd_link and hd_link.get('href'):
-            download_links.append({'quality': 'HD', 'url': hd_link['href']})
-        if not download_links:
-            link_pattern = re.compile(r'(https?://[^\s\'"]+\.mp4[^\'"\s]*)')
-            matches = link_pattern.findall(post_response.text)
-            for i, link in enumerate(set(matches), 1):
-                download_links.append({'quality': f'Quality_{i}', 'url': link})
-        if not download_links:
-            return {"error": "No downloadable video links found from FDown.net."}
-        return {
-            "links": download_links,
-            "title": title,
-            "thumbnail": "Not available"
-        }
-    except Exception as e:
-        LOGGER.error(f"Failed to fetch from FDown.net: {str(e)}")
-        return {"error": f"Failed to fetch from FDown.net: {str(e)}"}
+        LOGGER.error(f"Failed to fetch from ytdownload.in: {str(e)}")
+        return {"error": f"Failed to fetch from ytdownload.in: {str(e)}"}
 
 def get_download_links(fb_url):
     results = []
-    experts_result = get_experts_tool_links(fb_url)
-    if not isinstance(experts_result, dict) or "error" not in experts_result:
-        results.append(experts_result)
-    fdown_result = get_fdown_links(fb_url)
-    if not isinstance(fdown_result, dict) or "error" not in fdown_result:
-        results.append(fdown_result)
-    savef_result = get_savef_links(fb_url)
-    if not isinstance(savef_result, dict) or "error" not in savef_result:
-        results.append(savef_result)
+    ytdownload_result = asyncio.run(get_ytdownload_links(fb_url))
+    if not isinstance(ytdownload_result, dict) or "error" not in ytdownload_result:
+        results.append(ytdownload_result)
+    
     if not results:
         return {"error": "All sources failed to retrieve download links."}
+    
     combined_links = []
     title = "Unknown Title"
     thumbnail = "Not available"
@@ -160,8 +86,10 @@ def get_download_links(fb_url):
             title = result['title']
         if result.get('thumbnail') and result['thumbnail'] != "Not available":
             thumbnail = result['thumbnail']
+    
     if not combined_links:
         return {"error": "No valid download links found from any source."}
+    
     return {
         "links": combined_links,
         "title": title,
