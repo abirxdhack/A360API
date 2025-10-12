@@ -41,19 +41,20 @@ async def get_ytdownload_links(fb_url):
                 cookies=cookies
             ) as api_response:
                 response_data = await api_response.json() if api_response.content else {}
-                if not response_data or 'data' not in response_data:
+                if not response_data or 'responseFinal' not in response_data:
                     return {"error": "No downloadable content found from ytdownload.in."}
                 downloads = {'links': [], 'thumbnail': None, 'title': "Unknown Title"}
-                if 'data' in response_data and 'links' in response_data['data']:
-                    for link in response_data['data']['links']:
-                        quality = link.get('quality', 'Unknown')
-                        url = link.get('url')
-                        if url:
-                            downloads['links'].append({'quality': quality, 'url': url})
-                    if response_data['data'].get('thumbnail'):
-                        downloads['thumbnail'] = response_data['data']['thumbnail']
-                    if response_data['data'].get('title'):
-                        downloads['title'] = response_data['data']['title']
+                response_final = response_data['responseFinal']
+                if response_final.get('videoUrl'):
+                    downloads['links'].append({'quality': 'default', 'url': response_final['videoUrl']})
+                if response_final.get('formats'):
+                    for fmt in response_final['formats']:
+                        if fmt.get('url'):
+                            downloads['links'].append({'quality': fmt.get('resolution', 'Unknown'), 'url': fmt['url']})
+                if response_final.get('thumbnails'):
+                    downloads['thumbnail'] = response_final['thumbnails']
+                if response_final.get('title'):
+                    downloads['title'] = response_final['title']
                 if not downloads['links']:
                     return {"error": "No downloadable video links found from ytdownload.in."}
                 return downloads
