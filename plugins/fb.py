@@ -1,11 +1,9 @@
-#Copyright @ISmartCoder
-#Updates Channel @TheSmartDev 
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 import cloudscraper
 from bs4 import BeautifulSoup
 import aiohttp
-import asyncio
+from utils import LOGGER
 
 router = APIRouter(prefix="/fb")
 
@@ -45,7 +43,6 @@ async def get_ytdownload_links(fb_url):
                 response_data = await api_response.json() if api_response.content else {}
                 if not response_data or 'data' not in response_data:
                     return {"error": "No downloadable content found from ytdownload.in."}
-                
                 downloads = {'links': [], 'thumbnail': None, 'title': "Unknown Title"}
                 if 'data' in response_data and 'links' in response_data['data']:
                     for link in response_data['data']['links']:
@@ -57,7 +54,6 @@ async def get_ytdownload_links(fb_url):
                         downloads['thumbnail'] = response_data['data']['thumbnail']
                     if response_data['data'].get('title'):
                         downloads['title'] = response_data['data']['title']
-                
                 if not downloads['links']:
                     return {"error": "No downloadable video links found from ytdownload.in."}
                 return downloads
@@ -65,15 +61,13 @@ async def get_ytdownload_links(fb_url):
         LOGGER.error(f"Failed to fetch from ytdownload.in: {str(e)}")
         return {"error": f"Failed to fetch from ytdownload.in: {str(e)}"}
 
-def get_download_links(fb_url):
+async def get_download_links(fb_url):
     results = []
-    ytdownload_result = asyncio.run(get_ytdownload_links(fb_url))
+    ytdownload_result = await get_ytdownload_links(fb_url)
     if not isinstance(ytdownload_result, dict) or "error" not in ytdownload_result:
         results.append(ytdownload_result)
-    
     if not results:
         return {"error": "All sources failed to retrieve download links."}
-    
     combined_links = []
     title = "Unknown Title"
     thumbnail = "Not available"
@@ -86,10 +80,8 @@ def get_download_links(fb_url):
             title = result['title']
         if result.get('thumbnail') and result['thumbnail'] != "Not available":
             thumbnail = result['thumbnail']
-    
     if not combined_links:
         return {"error": "No valid download links found from any source."}
-    
     return {
         "links": combined_links,
         "title": title,
@@ -110,7 +102,7 @@ async def download_links(url: str = ""):
                     "api_updates": "t.me/abirxdhackz"
                 }
             )
-        result = get_download_links(url)
+        result = await get_download_links(url)
         if "error" in result:
             return JSONResponse(
                 status_code=400,
