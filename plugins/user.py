@@ -141,6 +141,11 @@ async def get_user_info(username):
         
         DC_LOCATIONS = get_dc_locations()
         user = await client.get_users(username)
+        
+        # Get full user info to retrieve bio
+        full_user = await client.get_chat(username)
+        bio = getattr(full_user, 'bio', None)
+        
         premium_status = getattr(user, 'is_premium', False)
         dc_location = DC_LOCATIONS.get(user.dc_id, "Unknown")
         account_created = estimate_account_creation_date(user.id)
@@ -173,6 +178,7 @@ async def get_user_info(username):
             "last_name": user.last_name,
             "username": user.username,
             "usernames": usernames_list,
+            "bio": bio,
             "dc_id": user.dc_id,
             "dc_location": dc_location,
             "is_premium": premium_status,
@@ -247,10 +253,10 @@ async def get_chat_info(username):
             "title": chat.title,
             "username": chat.username,
             "usernames": usernames_list,
+            "description": getattr(chat, 'description', None),
             "dc_id": getattr(chat, 'dc_id', None),
             "dc_location": dc_location,
             "members_count": getattr(chat, 'members_count', None),
-            "description": getattr(chat, 'description', None),
             "is_verified": getattr(chat, 'is_verified', False),
             "is_restricted": getattr(chat, 'is_restricted', False),
             "is_scam": getattr(chat, 'is_scam', False),
