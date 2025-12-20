@@ -1,5 +1,3 @@
-#Copyright @ISmartCoder
-#Updates Channel @TheSmartDev 
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 import requests
@@ -7,12 +5,9 @@ import re
 import html
 from collections import OrderedDict
 from utils import LOGGER
-from config import YOUTUBE_API_KEY
+from py_yt import VideosSearch, Search
 
 router = APIRouter(prefix="/yt")
-
-YOUTUBE_SEARCH_API_URL = "https://www.googleapis.com/youtube/v3/search"
-YOUTUBE_VIDEOS_API_URL = "https://www.googleapis.com/youtube/v3/videos"
 
 def extract_video_id(url):
     patterns = [
@@ -31,14 +26,18 @@ def extract_video_id(url):
         return query_match.group(1)
     return None
 
-def parse_duration(duration):
+def parse_duration(duration_str):
     try:
-        match = re.match(r'PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?', duration)
-        if not match:
+        if not duration_str:
             return "N/A"
-        hours = int(match.group(1) or 0)
-        minutes = int(match.group(2) or 0)
-        seconds = int(match.group(3) or 0)
+        parts = duration_str.split(':')
+        hours = minutes = seconds = 0
+        if len(parts) == 3:
+            hours, minutes, seconds = map(int, parts)
+        elif len(parts) == 2:
+            minutes, seconds = map(int, parts)
+        elif len(parts) == 1:
+            seconds = int(parts[0])
         formatted = ""
         if hours > 0:
             formatted += f"{hours}h "
@@ -50,75 +49,53 @@ def parse_duration(duration):
     except Exception:
         return "N/A"
 
-def fetch_youtube_details(video_id):
+async def fetch_youtube_details(video_id):
     try:
-        api_url = f"{YOUTUBE_VIDEOS_API_URL}?part=snippet,statistics,contentDetails&id={video_id}&key={YOUTUBE_API_KEY}"
-        response = requests.get(api_url)
-        if response.status_code != 200:
-            LOGGER.error(f"YouTube API returned status {response.status_code} for video {video_id}")
-            return {"error": "Failed to fetch YouTube video details."}
-        data = response.json()
-        if not data.get('items'):
+        src = VideosSearch(video_id, limit=1)
+        data = await src.next()
+        if not data or not data.get('result'):
             LOGGER.error(f"No video found for ID {video_id}")
             return {"error": "No video found for the provided ID."}
-        video = data['items'][0]
-        snippet = video['snippet']
-        stats = video['statistics']
-        content_details = video['contentDetails']
+        video = data['result'][0]
         return {
-            "title": html.unescape(snippet.get('title', 'N/A')),
-            "channel": html.unescape(snippet.get('channelTitle', 'N/A')),
-            "description": html.unescape(snippet.get('description', 'N/A')),
-            "tags": snippet.get('tags', []),
-            "imageUrl": snippet.get('thumbnails', {}).get('high', {}).get('url', ''),
-            "duration": parse_duration(content_details.get('duration', '')),
-            "views": stats.get('viewCount', 'N/A'),
-            "likes": stats.get('likeCount', 'N/A'),
-            "comments": stats.get('commentCount', 'N/A')
+            "title": html.unescape(video.get('title', 'N/A')),
+            "channel": html.unescape(video.get('channel', {}).get('name', 'N/A')),
+            "description": html.unescape(video.get('description', 'N/A')),
+            "tags": video.get('tags', []),
+            "imageUrl": video.get('thumbnails', [{}])[-1].get('url', ''),
+            "duration": parse_duration(video.get('duration', '')),
+            "views": video.get('viewCount', {}).get('short', 'N/A'),
+            "likes": video.get('accessibility', {}).get('likes', 'N/A') if video.get('accessibility') else 'N/A',
+            "comments": 'N/A'
         }
-    except requests.RequestException as e:
+    except Exception as e:
         LOGGER.error(f"Error fetching YouTube details for {video_id}: {str(e)}")
         return {"error": "Failed to fetch YouTube video details."}
 
-def fetch_youtube_search(query):
+async def fetch_youtube_search(query):
     try:
-        search_api_url = f"{YOUTUBE_SEARCH_API_URL}?part=snippet&q={requests.utils.quote(query)}&type=video&maxResults=10&key={YOUTUBE_API_KEY}"
-        search_response = requests.get(search_api_url)
-        if search_response.status_code != 200:
-            LOGGER.error(f"YouTube Search API returned status {search_response.status_code} for query {query}")
-            return {"error": "Failed to fetch search data."}
-        search_data = search_response.json()
-        video_ids = [item['id']['videoId'] for item in search_data.get('items', [])]
-        if not video_ids:
+        src = Search(query, limit=10)
+        data = await src.next()
+        if not data or not data.get('result'):
             LOGGER.error(f"No videos found for query {query}")
             return {"error": "No videos found for the provided query."}
-        videos_api_url = f"{YOUTUBE_VIDEOS_API_URL}?part=snippet,statistics,contentDetails&id={','.join(video_ids)}&key={YOUTUBE_API_KEY}"
-        videos_response = requests.get(videos_api_url)
-        if videos_response.status_code != 200:
-            LOGGER.error(f"YouTube Videos API returned status {videos_response.status_code} for query {query}")
-            return {"error": "Failed to fetch video details."}
-        videos_data = videos_response.json()
-        videos_map = {video['id']: video for video in videos_data.get('items', [])}
         result = []
-        for item in search_data.get('items', []):
-            video_id = item['id']['videoId']
-            snippet = item['snippet']
-            video = videos_map.get(video_id, {})
-            content_details = video.get('contentDetails', {})
-            stats = video.get('statistics', {})
+        for item in data['result']:
+            if item.get('type') != 'video':
+                continue
             result.append({
-                "title": html.unescape(snippet.get('title', 'N/A')),
-                "channel": html.unescape(snippet.get('channelTitle', 'N/A')),
-                "tags": video.get('snippet', {}).get('tags', []),
-                "imageUrl": snippet.get('thumbnails', {}).get('high', {}).get('url', ''),
-                "link": f"https://youtube.com/watch?v={video_id}",
-                "duration": parse_duration(content_details.get('duration', '')),
-                "views": stats.get('viewCount', 'N/A'),
-                "likes": stats.get('likeCount', 'N/A'),
-                "comments": stats.get('commentCount', 'N/A')
+                "title": html.unescape(item.get('title', 'N/A')),
+                "channel": html.unescape(item.get('channel', {}).get('name', 'N/A')),
+                "tags": [],
+                "imageUrl": item.get('thumbnails', [{}])[-1].get('url', ''),
+                "link": item.get('link', ''),
+                "duration": parse_duration(item.get('duration', '')),
+                "views": item.get('viewCount', {}).get('short', 'N/A'),
+                "likes": item.get('accessibility', {}).get('likes', 'N/A') if item.get('accessibility') else 'N/A',
+                "comments": 'N/A'
             })
-        return result
-    except requests.RequestException as e:
+        return result if result else {"error": "No videos found for the provided query."}
+    except Exception as e:
         LOGGER.error(f"Error fetching YouTube search data for {query}: {str(e)}")
         return {"error": "Failed to fetch search data."}
 
@@ -144,7 +121,7 @@ async def download(url: str = ""):
             }
         )
     standard_url = f"https://www.youtube.com/watch?v={video_id}"
-    youtube_data = fetch_youtube_details(video_id)
+    youtube_data = await fetch_youtube_details(video_id)
     if "error" in youtube_data:
         youtube_data = {
             "title": "Unavailable",
@@ -223,7 +200,7 @@ async def search(query: str = ""):
                 "api_updates": "t.me/abirxdhackzs"
             }
         )
-    search_data = fetch_youtube_search(query)
+    search_data = await fetch_youtube_search(query)
     if "error" in search_data:
         return JSONResponse(
             status_code=500,
