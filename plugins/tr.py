@@ -1,5 +1,3 @@
-#Copyright @ISmartCoder
-#Updates Channel @TheSmartDev 
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from googletrans import Translator, LANGUAGES
@@ -31,7 +29,7 @@ async def translate(text: str = "", lang: str = "en"):
         )
     
     try:
-        translation = translator.translate(text, dest=lang)
+        translation = await translator.translate(text, dest=lang)
         return JSONResponse(
             content={
                 "translated_text": translation.text,
