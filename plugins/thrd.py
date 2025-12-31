@@ -1,46 +1,234 @@
 from fastapi import APIRouter, Query
 from fastapi.responses import JSONResponse
 import requests
-from bs4 import BeautifulSoup
-import time
+import json
 import re
+import time
+import traceback
 from collections import OrderedDict
+from io import BytesIO
+
+try:
+    import zstandard as zstd
+    HAS_ZSTD = True
+except ImportError:
+    HAS_ZSTD = False
+
+try:
+    import brotli
+    HAS_BROTLI = True
+except ImportError:
+    HAS_BROTLI = False
 
 router = APIRouter(prefix="/thrd")
 
-def get_threads_info(url: str):
-    api_url = "https://api.threadsphotodownloader.com/v2/media"
-    params = {"url": url}
-    headers = {
-        "User-Agent": "Mozilla/5.0",
-        "Accept": "*/*",
-        "Referer": "https://sssthreads.pro/",
-        "Origin": "https://sssthreads.pro",
-        "Accept-Encoding": "gzip, deflate, br, zstd",
-        "Accept-Language": "en-US,en;q=0.9",
-    }
-    try:
-        resp = requests.get(api_url, params=params, headers=headers, timeout=30)
-        data = resp.content
-        enc = resp.headers.get("content-encoding", "").lower().strip()
+def decompress_response(response):
+    content_encoding = response.headers.get('Content-Encoding', '').lower()
+    
+    if content_encoding == 'zstd':
+        if not HAS_ZSTD:
+            return response.text
         try:
-            if enc == "zstd":
-                import zstandard
-                dctx = zstandard.ZstdDecompressor()
-                data = dctx.decompress(data, max_output_size=20000000)
-            elif enc == "gzip":
-                import gzip
-                data = gzip.decompress(data)
-            elif enc == "br":
-                import brotli
-                data = brotli.decompress(data)
-            elif enc == "deflate":
-                import zlib
-                data = zlib.decompress(data)
-        except Exception:
-            data = resp.content
-        import json
-        return json.loads(data.decode("utf-8", "ignore"))
+            raw_content = response.content
+            dctx = zstd.ZstdDecompressor()
+            decompressed = dctx.decompress(raw_content, max_output_size=100*1024*1024)
+            return decompressed.decode('utf-8', errors='replace')
+        except Exception as e:
+            try:
+                raw_content = response.content
+                dctx = zstd.ZstdDecompressor()
+                with dctx.stream_reader(BytesIO(raw_content)) as reader:
+                    decompressed = reader.read()
+                return decompressed.decode('utf-8', errors='replace')
+            except:
+                return response.text
+    elif content_encoding == 'br':
+        if not HAS_BROTLI:
+            return response.text
+        try:
+            decompressed = brotli.decompress(response.content)
+            return decompressed.decode('utf-8')
+        except:
+            return response.text
+    else:
+        return response.text
+
+def get_fresh_session():
+    session = requests.Session()
+    
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Linux; Android 15; V2434 Build/AP3A.240905.015.A2_NN_V000L1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.35 Mobile Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+        'Accept-Encoding': 'gzip, deflate, br, zstd',
+        'Accept-Language': 'en-GB,en-US;q=0.9,en;q=0.8',
+        'sec-ch-ua': '"Android WebView";v="143", "Chromium";v="143", "Not A(Brand";v="24"',
+        'sec-ch-ua-mobile': '?1',
+        'sec-ch-ua-platform': '"Android"',
+        'sec-fetch-site': 'none',
+        'sec-fetch-mode': 'navigate',
+        'sec-fetch-user': '?1',
+        'sec-fetch-dest': 'document',
+        'upgrade-insecure-requests': '1',
+        'priority': 'u=0, i'
+    }
+    
+    try:
+        response = session.get('https://threadster.app/', headers=headers, timeout=30)
+        
+        csrf_token = None
+        for cookie in session.cookies:
+            if cookie.name == '_csrf':
+                csrf_token = cookie.value
+                break
+        
+        return session, csrf_token
+        
+    except Exception as e:
+        return None, None
+
+def send_analytics(session, csrf_token):
+    analytics_headers = {
+        'User-Agent': 'Mozilla/5.0 (Linux; Android 15; V2434 Build/AP3A.240905.015.A2_NN_V000L1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.35 Mobile Safari/537.36',
+        'Accept-Encoding': 'gzip, deflate, br, zstd',
+        'Content-Type': 'application/json',
+        'sec-ch-ua-platform': '"Android"',
+        'sec-ch-ua': '"Android WebView";v="143", "Chromium";v="143", "Not A(Brand";v="24"',
+        'sec-ch-ua-mobile': '?1',
+        'origin': 'https://threadster.app',
+        'x-requested-with': 'mark.via.gp',
+        'sec-fetch-site': 'cross-site',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-dest': 'empty',
+        'accept-language': 'en-GB,en-US;q=0.9,en;q=0.8',
+        'priority': 'u=1, i'
+    }
+    
+    payload1 = {
+        "type": "event",
+        "payload": {
+            "website": "38cfaa2c-9fcc-4dc6-8325-aa645f714572",
+            "screen": "427x953",
+            "language": "en-GB",
+            "title": "Downloads Threads Videos | Threads Video Download | Threadster",
+            "hostname": "threadster.app",
+            "url": "https://threadster.app/",
+            "referrer": ""
+        }
+    }
+    
+    try:
+        session.post(
+            'https://analytics.aculix.xyz/api/send',
+            data=json.dumps(payload1),
+            headers=analytics_headers,
+            timeout=30
+        )
+    except:
+        pass
+    
+    try:
+        payload2 = '{"n":"pageview","u":"https://threadster.app/","d":"threadster.app","r":null,"w":426}'
+        analytics_headers2 = analytics_headers.copy()
+        analytics_headers2['Content-Type'] = 'text/plain'
+        
+        session.post(
+            'https://analytics.aculix.online/api/event',
+            data=payload2,
+            headers=analytics_headers2,
+            timeout=30
+        )
+    except:
+        pass
+
+def get_threads_info(threads_url):
+    download_headers = {
+        'User-Agent': 'Mozilla/5.0 (Linux; Android 15; V2434 Build/AP3A.240905.015.A2_NN_V000L1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.35 Mobile Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+        'Accept-Encoding': 'gzip, deflate, br, zstd',
+        'cache-control': 'max-age=0',
+        'sec-ch-ua': '"Android WebView";v="143", "Chromium";v="143", "Not A(Brand";v="24"',
+        'sec-ch-ua-mobile': '?1',
+        'sec-ch-ua-platform': '"Android"',
+        'origin': 'null',
+        'upgrade-insecure-requests': '1',
+        'x-requested-with': 'mark.via.gp',
+        'sec-fetch-site': 'same-origin',
+        'sec-fetch-mode': 'navigate',
+        'sec-fetch-user': '?1',
+        'sec-fetch-dest': 'document',
+        'accept-language': 'en-GB,en-US;q=0.9,en;q=0.8',
+        'priority': 'u=0, i'
+    }
+    
+    try:
+        session, csrf_token = get_fresh_session()
+        
+        if not session:
+            return {"error": "Failed to initialize session"}
+        
+        send_analytics(session, csrf_token)
+        
+        payload = {
+            'url': threads_url
+        }
+        
+        response = session.post(
+            'https://threadster.app/download',
+            data=payload,
+            headers=download_headers,
+            timeout=60,
+            stream=False
+        )
+        
+        decompressed_text = decompress_response(response)
+        
+        video_links = re.findall(r'href="(https://downloads\.acxcdn\.com/threadster/video\?token=[^"]+)"', decompressed_text)
+        image_links = re.findall(r'href="(https://downloads\.acxcdn\.com/threadster/image\?token=[^"]+)"', decompressed_text)
+        
+        username_match = re.search(r'<span>@([^<]+)</span>', decompressed_text)
+        username = username_match.group(1) if username_match else None
+        
+        caption_match = re.search(r'<div class="download__item__caption__text">([^<]+)</div>', decompressed_text)
+        caption = caption_match.group(1).strip() if caption_match else None
+        
+        resolution_info = re.findall(r'<td>([^<]+)</td>.*?href="([^"]+)"', decompressed_text, re.DOTALL)
+        
+        media_items = []
+        
+        for i, link in enumerate(video_links, 1):
+            media_items.append({
+                'type': 'video',
+                'url': link,
+                'index': i
+            })
+        
+        for i, link in enumerate(image_links, 1):
+            media_items.append({
+                'type': 'image',
+                'url': link,
+                'index': i
+            })
+        
+        resolutions = []
+        if resolution_info:
+            for res, link in resolution_info:
+                resolutions.append({
+                    'quality': res.strip(),
+                    'url': link
+                })
+        
+        result = {
+            'username': username,
+            'caption': caption,
+            'media_count': len(media_items),
+            'video_count': len(video_links),
+            'image_count': len(image_links),
+            'media': media_items,
+            'resolutions': resolutions
+        }
+        
+        return result
+            
     except Exception as e:
         return {"error": str(e)}
 
