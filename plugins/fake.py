@@ -1,5 +1,3 @@
-#Copyright @ISmartCoder
-#Updates Channel @TheSmartDev 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 from smartfaker import Faker
@@ -27,13 +25,13 @@ async def get_address(code: str = "", amount: int = 1):
                 "api_updates": "t.me/abirxdhackz"
             }
         )
-    
+
     file_country_code = 'GB' if country_code == 'UK' else country_code
     try:
         addresses = await fake.address(file_country_code, amount)
         if amount == 1:
             addresses = [addresses]
-        
+
         if not addresses:
             return JSONResponse(
                 status_code=404,
@@ -43,16 +41,16 @@ async def get_address(code: str = "", amount: int = 1):
                     "api_updates": "t.me/abirxdhackz"
                 }
             )
-        
+
         response_addresses = []
         for address in addresses:
             address["api_owner"] = "@ISmartCoder"
             address["api_updates"] = "t.me/abirxdhackz"
             address["country_flag"] = get_flag(file_country_code)
             response_addresses.append(address)
-        
+
         return JSONResponse(content=response_addresses if amount > 1 else response_addresses[0])
-    
+
     except ValueError:
         LOGGER.error(f"Invalid country code provided: {file_country_code}")
         return JSONResponse(
@@ -87,7 +85,7 @@ async def get_countries():
                     "api_updates": "t.me/abirxdhackz"
                 }
             )
-        
+
         formatted_countries = []
         for country in countries:
             country_code = country['country_code']
@@ -96,7 +94,7 @@ async def get_countries():
                 "country_code": display_country_code,
                 "country_name": country['country_name']
             })
-        
+
         return JSONResponse(
             content={
                 "countries": sorted(formatted_countries, key=lambda x: x["country_name"]),
@@ -105,9 +103,111 @@ async def get_countries():
                 "api_updates": "t.me/abirxdhackz"
             }
         )
-    
+
     except Exception as e:
         LOGGER.error(f"Error processing countries request: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error": str(e),
+                "api_owner": "@ISmartCoder",
+                "api_updates": "t.me/abirxdhackz"
+            }
+        )
+
+@router.get("/ibans")
+async def get_ibans(code: str = "", amount: int = 1):
+    country_code = code.upper()
+    if not country_code:
+        return JSONResponse(
+            status_code=400,
+            content={
+                "error": "Country code parameter is required",
+                "api_owner": "@ISmartCoder",
+                "api_updates": "t.me/abirxdhackz"
+            }
+        )
+
+    file_country_code = 'GB' if country_code == 'UK' else country_code
+    try:
+        ibans = await fake.iban(file_country_code, amount)
+        if amount == 1:
+            ibans = [ibans]
+
+        if not ibans:
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "error": "Sorry No IBAN Available For This Country",
+                    "api_owner": "@ISmartCoder",
+                    "api_updates": "t.me/abirxdhackz"
+                }
+            )
+
+        response_ibans = []
+        for iban in ibans:
+            iban["api_owner"] = "@ISmartCoder"
+            iban["api_updates"] = "t.me/abirxdhackz"
+            iban["country_flag"] = get_flag(file_country_code)
+            response_ibans.append(iban)
+
+        return JSONResponse(content=response_ibans if amount > 1 else response_ibans[0])
+
+    except ValueError:
+        LOGGER.error(f"Invalid country code provided: {file_country_code}")
+        return JSONResponse(
+            status_code=404,
+            content={
+                "error": "Sorry Bro Invalid Country Code Provided",
+                "api_owner": "@ISmartCoder",
+                "api_updates": "t.me/abirxdhackz"
+            }
+        )
+    except Exception as e:
+        LOGGER.error(f"Error processing iban request for {file_country_code}: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={
+                "error": str(e),
+                "api_owner": "@ISmartCoder",
+                "api_updates": "t.me/abirxdhackz"
+            }
+        )
+
+@router.get("/ibancountries")
+async def get_iban_countries():
+    try:
+        countries = fake.iban_countries()
+        if not countries:
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "error": "No IBAN countries found",
+                    "api_owner": "@ISmartCoder",
+                    "api_updates": "t.me/abirxdhackz"
+                }
+            )
+
+        formatted_countries = []
+        for country in countries:
+            country_code = country['country_code']
+            display_country_code = 'GB' if country_code == 'UK' else country_code
+            formatted_countries.append({
+                "country_code": display_country_code,
+                "country_name": country['country_name']
+            })
+
+        return JSONResponse(
+            content={
+                "countries": sorted(formatted_countries, key=lambda x: x["country_name"]),
+                "total_countries": len(formatted_countries),
+                "api_owner": "@ISmartCoder",
+                "api_updates": "t.me/abirxdhackz"
+            }
+        )
+
+    except Exception as e:
+        LOGGER.error(f"Error processing iban countries request: {str(e)}")
         return JSONResponse(
             status_code=500,
             content={
