@@ -1,8 +1,6 @@
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import JSONResponse
 import aiohttp
-import re
-import html
 import time
 from collections import OrderedDict
 
@@ -11,79 +9,94 @@ from utils import LOGGER
 router = APIRouter(prefix="/dmn")
 
 HEADERS = {
-    'User-Agent': "Mozilla/5.0 (Linux; Android 11; RMX1993 Build/RKQ1.201112.002) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.7390.122 Mobile Safari/537.36",
-    'Accept': "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+    'User-Agent': "Mozilla/5.0 (Linux; Android 15; V2434 Build/AP3A.240905.015.A2_NN_V000L1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.35 Mobile Safari/537.36",
     'Accept-Encoding': "gzip, deflate, br, zstd",
-    'sec-ch-ua': "\"Android WebView\";v=\"141\", \"Not?A_Brand\";v=\"8\", \"Chromium\";v=\"141\"",
-    'sec-ch-ua-mobile': "?1",
     'sec-ch-ua-platform': "\"Android\"",
-    'upgrade-insecure-requests': "1",
-    'dnt': "1",
+    'sec-ch-ua': "\"Android WebView\";v=\"143\", \"Chromium\";v=\"143\", \"Not A(Brand\";v=\"24\"",
+    'sec-ch-ua-mobile': "?1",
+    'origin': "https://client.rdap.org",
     'x-requested-with': "mark.via.gp",
-    'sec-fetch-site': "none",
-    'sec-fetch-mode': "navigate",
-    'sec-fetch-user': "?1",
-    'sec-fetch-dest': "document",
-    'accept-language': "en-US,en;q=0.9",
-    'priority': "u=0, i"
+    'sec-fetch-site': "cross-site",
+    'sec-fetch-mode': "cors",
+    'sec-fetch-dest': "empty",
+    'referer': "https://client.rdap.org/",
+    'accept-language': "en-GB,en-US;q=0.9,en;q=0.8",
+    'priority': "u=1, i"
 }
 
-def clean_html_fragment(s: str) -> str:
-    if s is None:
-        return ""
-    s = s.replace("<br>", "\n").replace("<br/>", "\n").replace("<br />", "\n")
-    s = re.sub(r"<[^>]+>", "", s)
-    s = html.unescape(s)
-    s = re.sub(r"[ \t\r\f\v]+", " ", s).strip()
-    s = re.sub(r"\n\s+", "\n", s)
-    return s
+def get_rdap_url(domain: str) -> str:
+    domain_upper = domain.upper()
+    tld = domain.split('.')[-1].lower()
+    
+    rdap_servers = {
+        'com': f"https://rdap.verisign.com/com/v1/domain/{domain}?jscard=1",
+        'net': f"https://rdap.verisign.com/net/v1/domain/{domain}?jscard=1",
+        'org': f"https://rdap.publicinterestregistry.org/rdap/domain/{domain}",
+        'info': f"https://rdap.afilias-srs.net/rdap/afilias-info/domain/{domain}",
+        'biz': f"https://rdap.afilias-srs.net/rdap/afilias-biz/domain/{domain}",
+        'us': f"https://rdap.nic.us/domain/{domain}",
+        'co': f"https://rdap.nic.co/domain/{domain}",
+        'me': f"https://rdap.nic.me/domain/{domain}",
+        'io': f"https://rdap.nic.io/domain/{domain}",
+        'app': f"https://rdap.nic.google/rdap/domain/{domain}",
+        'dev': f"https://rdap.nic.google/rdap/domain/{domain}",
+        'page': f"https://rdap.nic.google/rdap/domain/{domain}",
+    }
+    
+    return rdap_servers.get(tld, f"https://rdap.markmonitor.com/rdap/domain/{domain_upper}")
 
-def parse_label_value_pairs(html_text: str):
-    pairs = {}
-    pattern = re.compile(
-        r'<div\s+class=["\']df-row["\']\s*>\s*'
-        r'<div\s+class=["\']df-label["\']\s*>(?P<label>.*?)</div>\s*'
-        r'<div\s+class=["\']df-value["\']\s*>(?P<value>.*?)</div>\s*'
-        r'</div>',
-        re.S | re.I
-    )
-    for m in pattern.finditer(html_text):
-        raw_label = m.group("label")
-        raw_value = m.group("value")
-        label = clean_html_fragment(raw_label).rstrip(":").strip()
-        value = clean_html_fragment(raw_value)
-        norm_label = label.lower().replace(" ", "_")
-        pairs[norm_label] = value
-    return pairs
-
-def fallback_domain_from_h1(html_text: str) -> str:
-    m = re.search(r"<h1[^>]*>\s*([^<\n\r]+?)\s*</h1>", html_text, re.I)
-    if m:
-        return clean_html_fragment(m.group(1))
-    return ""
-
-def build_structured_json(pairs, html_text):
-    out = {}
-    out['domain'] = pairs.get('domain') or fallback_domain_from_h1(html_text)
-    out['registered_on'] = pairs.get('registered_on') or pairs.get('registration_date')
-    out['expires_on'] = pairs.get('expires_on') or pairs.get('expiry_date') or pairs.get('registrar_registration_expiration_date')
-    out['updated_on'] = pairs.get('updated_on') or pairs.get('last_updated')
-    out['status'] = pairs.get('status')
-    ns_raw = pairs.get('name_servers') or pairs.get('name_server') or pairs.get('name_servers:')
-    if ns_raw:
-        ns = [line.strip().strip(".") for line in ns_raw.splitlines() if line.strip()]
-    else:
-        ns = []
-    out['name_servers'] = ns
-    out['registrar'] = pairs.get('registrar')
-    out['iana_id'] = pairs.get('iana_id')
-    out['registrar_email'] = pairs.get('email')
-    out['registrar_abuse_email'] = pairs.get('abuse_email')
-    out['registrar_abuse_phone'] = pairs.get('abuse_phone')
-    out['registrant_state'] = pairs.get('state')
-    out['registrant_country'] = pairs.get('country')
-    out['raw_pairs'] = pairs
-    return out
+def parse_rdap_data(rdap_data: dict) -> dict:
+    structured = {}
+    
+    structured['domain'] = rdap_data.get('ldhName') or rdap_data.get('name', '')
+    
+    events = rdap_data.get('events', [])
+    for event in events:
+        event_action = event.get('eventAction', '')
+        event_date = event.get('eventDate', '')
+        if event_action == 'registration':
+            structured['registered_on'] = event_date
+        elif event_action == 'expiration':
+            structured['expires_on'] = event_date
+        elif event_action == 'last changed':
+            structured['updated_on'] = event_date
+    
+    structured['status'] = rdap_data.get('status', [])
+    
+    nameservers = rdap_data.get('nameservers', [])
+    ns_list = []
+    for ns in nameservers:
+        ns_name = ns.get('ldhName', '')
+        if ns_name:
+            ns_list.append(ns_name.strip('.'))
+    structured['name_servers'] = ns_list
+    
+    entities = rdap_data.get('entities', [])
+    for entity in entities:
+        roles = entity.get('roles', [])
+        if 'registrar' in roles:
+            vcards = entity.get('vcardArray', [])
+            if len(vcards) > 1:
+                for vcard in vcards[1]:
+                    if isinstance(vcard, list) and len(vcard) > 0:
+                        vcard_type = vcard[0]
+                        if vcard_type == 'fn' and len(vcard) > 3:
+                            structured['registrar'] = vcard[3]
+                        elif vcard_type == 'email' and len(vcard) > 3:
+                            if not structured.get('registrar_email'):
+                                structured['registrar_email'] = vcard[3]
+            
+            public_ids = entity.get('publicIds', [])
+            for pid in public_ids:
+                if pid.get('type') == 'IANA Registrar ID':
+                    structured['iana_id'] = pid.get('identifier', '')
+    
+    structured['registrar_abuse_email'] = None
+    structured['registrar_abuse_phone'] = None
+    structured['registrant_state'] = None
+    structured['registrant_country'] = None
+    
+    return structured
 
 @router.get("")
 async def whois_domain(domain: str = Query(..., description="Domain name to lookup")):
@@ -92,31 +105,39 @@ async def whois_domain(domain: str = Query(..., description="Domain name to look
         raise HTTPException(status_code=400, detail="Domain parameter is required")
 
     domain = domain.strip().lower()
-    if not re.match(r'^[a-z0-9.-]+\.[a-z]{2,}$', domain):
-        raise HTTPException(status_code=400, detail="Invalid domain format")
-
-    url = f"https://www.whois.com/whois/{domain}"
+    
+    url = get_rdap_url(domain)
 
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(url, headers=HEADERS, timeout=20) as resp:
                 if resp.status != 200:
-                    raise HTTPException(status_code=resp.status, detail="Failed to fetch WHOIS page")
-                html_text = await resp.text()
+                    raise HTTPException(status_code=resp.status, detail="Failed to fetch RDAP data")
+                rdap_data = await resp.json()
     except Exception as e:
-        LOGGER.error(f"Failed to fetch whois for {domain}: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to fetch WHOIS data")
+        LOGGER.error(f"Failed to fetch RDAP for {domain}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Failed to fetch RDAP data")
 
-    pairs = parse_label_value_pairs(html_text)
-    structured = build_structured_json(pairs, html_text)
+    structured = parse_rdap_data(rdap_data)
 
     time_taken = f"{time.time() - start_time:.2f}s"
 
     response = OrderedDict()
     response.update(structured)
+    response["data"] = {
+        "name": rdap_data.get("name"),
+        "ldhName": rdap_data.get("ldhName"),
+        "status": rdap_data.get("status", []),
+        "events": rdap_data.get("events", []),
+        "entities": rdap_data.get("entities", []),
+        "remarks": rdap_data.get("remarks", []),
+        "notices": rdap_data.get("notices", []),
+        "links": rdap_data.get("links", []),
+        "_raw_rdap": rdap_data
+    }
     response["time_taken"] = time_taken
     response["api_owner"] = "@ISmartCoder"
     response["api_dev"] = "@abirxdhackz"
-    response["source"] = "whois.com"
+    response["source"] = "rdap"
 
     return JSONResponse(content=dict(response))
