@@ -1,7 +1,7 @@
 [project]
-name = "A360API"
+name = "a360api"
 version = "1.0.0"
-description = "Async FastAPI-based multi-purpose API backend"
+description = "Async FastAPI-based API backend"
 readme = "README.md"
 requires-python = ">=3.11"
 
@@ -41,3 +41,11 @@ dependencies = [
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["*"]
+exclude = ["templates*", "static*", "assets*", "frontend*"]
