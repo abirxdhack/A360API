@@ -1,5 +1,3 @@
-#Copyright @ISmartCoder
-#Updates Channel @TheSmartDev 
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 from pyrogram import Client
@@ -11,6 +9,7 @@ from config import API_ID, API_HASH, BOT_TOKEN
 from utils import LOGGER
 import asyncio
 import threading
+import os
 
 router = APIRouter(prefix="/user")
 client = None
@@ -92,11 +91,14 @@ async def ensure_client():
     with client_lock:
         if client is None:
             try:
+                os.makedirs("/tmp", exist_ok=True)
                 client = Client(
                     "A360APIUser",
                     api_id=API_ID,
                     api_hash=API_HASH,
-                    bot_token=BOT_TOKEN
+                    bot_token=BOT_TOKEN,
+                    workdir="/tmp",
+                    in_memory=True
                 )
                 await client.start()
                 LOGGER.info("Pyrogram client started successfully")
@@ -119,11 +121,14 @@ async def ensure_client():
         except Exception as e:
             LOGGER.error(f"Failed to check/restart client: {str(e)}")
             try:
+                os.makedirs("/tmp", exist_ok=True)
                 client = Client(
                     "A360APIUser",
                     api_id=API_ID,
                     api_hash=API_HASH,
-                    bot_token=BOT_TOKEN
+                    bot_token=BOT_TOKEN,
+                    workdir="/tmp",
+                    in_memory=True
                 )
                 await client.start()
                 LOGGER.info("Pyrogram client recreated successfully")
@@ -142,7 +147,6 @@ async def get_user_info(username):
         DC_LOCATIONS = get_dc_locations()
         user = await client.get_users(username)
         
-        # Get full user info to retrieve bio
         full_user = await client.get_chat(username)
         bio = getattr(full_user, 'bio', None)
         

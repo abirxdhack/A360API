@@ -1,0 +1,51 @@
+[project]
+name = "a360api"
+version = "1.0.0"
+description = "Async FastAPI-based API backend"
+readme = "README.md"
+requires-python = ">=3.11"
+
+dependencies = [
+    "fastapi",
+    "uvicorn",
+
+    "motor",
+    "telethon",
+    "pyrofork",
+    "tgcrypto",
+    "cryptg",
+
+    "aiohttp<3.13",
+    "requests",
+    "cloudscraper",
+
+    "pytz",
+    "python-dateutil",
+    "pycountry",
+
+    "pydantic<2.0",
+
+    "beautifulsoup4",
+    "googletrans",
+
+    "pillow",
+    "brotli",
+    "zstandard",
+
+    "smartfaker",
+    "smartbindb",
+
+    "py-yt-search==0.2"
+]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["*"]
+exclude = ["templates*", "static*", "assets*", "frontend*"]

@@ -1,5 +1,3 @@
-#Copyright @ISmartCoder
-#Updates Channel @TheSmartDev 
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 import os
@@ -13,6 +11,7 @@ app = FastAPI(
     title="A360",
     description="A Project Made To Centralize Various APIs 📖 No Authorization Needed, All Endpoints Included :"
 )
+
 start_time = time.time()
 
 def load_index_html():
@@ -39,14 +38,21 @@ def load_health_html():
         LOGGER.error("health.html not found in templates directory")
         return "<h1>API Health</h1><p>Health page not found.</p>"
 
-def get_server_address():
-    hostname = socket.gethostname()
+def get_actual_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
-        ip_address = socket.gethostbyname(hostname)
-    except socket.gaierror:
-        ip_address = "localhost"
-    port = os.getenv("PORT", 8000)
-    return f"http://{ip_address}:{port}"
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+    except Exception:
+        ip = "127.0.0.1"
+    finally:
+        s.close()
+    return ip
+
+def get_server_address():
+    ip = get_actual_ip()
+    port = int(os.getenv("PORT", 4434))
+    return f"http://{ip}:{port}"
 
 def get_uptime():
     uptime_seconds = time.time() - start_time
@@ -109,11 +115,10 @@ load_plugins()
 if __name__ == "__main__":
     import uvicorn
     host = "0.0.0.0"
-    port = int(os.getenv("PORT", 8000))
-    LOGGER.info(f"Starting server at {get_server_address()}")
-
+    port = int(os.getenv("PORT", 4434))
+    LOGGER.info(f"API Running At {get_server_address()}")
     uvicorn.run(
-        "main:app",  
+        "main:app",
         host=host,
         port=port,
         reload=os.getenv("RELOAD", "false").lower() == "true"
