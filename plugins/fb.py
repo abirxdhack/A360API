@@ -1,6 +1,8 @@
 from fastapi import APIRouter
 from fastapi.responses import JSONResponse
-import cloudscraper
+import requests
+from bs4 import BeautifulSoup
+import re
 
 router = APIRouter(prefix="/fb", tags=["Facebook Downloader"])
 
@@ -27,33 +29,33 @@ async def fb_downloader(url: str = ""):
         )
 
     try:
-        scraper = cloudscraper.create_scraper(
-            browser={"browser": "chrome", "platform": "android", "mobile": True},
-            delay=15
-        )
-
         headers = {
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-            "Origin": "https://ytdownload.in",
-            "Referer": "https://ytdownload.in/",
-            "User-Agent": "Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Mobile Safari/537.36",
-            "sec-ch-ua": '"Chromium";v="141", "Not;A=Brand";v="99", "Google Chrome";v="141"',
+            "User-Agent": "Mozilla/5.0 (Linux; Android 15; V2434 Build/AP3A.240905.015.A2_NN_V000L1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.7499.35 Mobile Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "Accept-Encoding": "gzip, deflate, br, zstd",
+            "cache-control": "max-age=0",
+            "sec-ch-ua": '"Android WebView";v="143", "Chromium";v="143", "Not A(Brand)";v="24"',
             "sec-ch-ua-mobile": "?1",
-            "sec-ch-ua-platform": '"Android"'
+            "sec-ch-ua-platform": '"Android"',
+            "origin": "https://fdown.net",
+            "upgrade-insecure-requests": "1",
+            "x-requested-with": "mark.via.gp",
+            "sec-fetch-site": "same-origin",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-user": "?1",
+            "sec-fetch-dest": "document",
+            "referer": "https://fdown.net/",
+            "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
+            "priority": "u=0, i"
         }
-
-        scraper.get("https://ytdownload.in", headers=headers, timeout=30)
 
         payload = {
-            "url": url.strip(),
-            "format": "mp4",
-            "quality": "1080p"
+            "URLz": url.strip()
         }
 
-        resp = scraper.post(
-            "https://ytdownload.in/api/allinonedownload",
-            json=payload,
+        resp = requests.post(
+            "https://fdown.net/download.php",
+            data=payload,
             headers=headers,
             timeout=45
         )
@@ -68,33 +70,42 @@ async def fb_downloader(url: str = ""):
                 }
             )
 
-        data = resp.json()
-        if not data or "responseFinal" not in data:
-            return JSONResponse(
-                status_code=404,
-                content={
-                    "error": "Video not found or private",
-                    "api_owner": "@ISmartCoder",
-                    "api_updates": "t.me/abirxdhackz"
-                }
-            )
+        html = resp.text
+        soup = BeautifulSoup(html, 'html.parser')
 
-        result = data["responseFinal"]
+        title = "Facebook Video"
+        title_elem = soup.find('div', class_='lib-row lib-header')
+        if title_elem:
+            title_text = title_elem.get_text(strip=True)
+            if title_text and title_text != "No video title":
+                title = title_text
+
+        thumbnail = None
+        img_elem = soup.find('img', class_='lib-img-show')
+        if img_elem and img_elem.get('src'):
+            thumb_src = img_elem['src']
+            if 'no-thumbnail-fbdown.png' not in thumb_src:
+                thumbnail = thumb_src
+
         links = []
-        title = result.get("title") or "Facebook Video"
-        thumbnail = result.get("thumbnails") or result.get("thumbnail")
-
-        if result.get("videoUrl"):
-            links.append({"quality": "HD", "url": result["videoUrl"]})
-
-        if result.get("formats"):
-            for fmt in result["formats"]:
-                if fmt.get("url"):
-                    q = fmt.get("resolution") or fmt.get("qualityLabel") or "Unknown"
-                    links.append({"quality": q, "url": fmt["url"]})
-
-        if result.get("downloadUrl"):
-            links.append({"quality": "SD", "url": result["downloadUrl"]})
+        download_links = soup.find_all('a', href=True)
+        
+        for link in download_links:
+            href = link.get('href', '')
+            text = link.get_text(strip=True)
+            
+            if 'download' in href.lower() or 'fbcdn.net' in href:
+                quality = "Unknown"
+                
+                if 'hd' in text.lower() or 'high' in text.lower():
+                    quality = "HD"
+                elif 'sd' in text.lower() or 'normal' in text.lower() or 'low' in text.lower():
+                    quality = "SD"
+                elif text:
+                    quality = text
+                
+                if href.startswith('http'):
+                    links.append({"quality": quality, "url": href})
 
         seen = set()
         unique_links = []
