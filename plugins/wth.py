@@ -35,15 +35,103 @@ def download_font(url, size):
     
     return ImageFont.load_default()
 
-def get_timezone_from_coordinates(lat, lon):
-    timezone_mapping = {
-        'BD': 'Asia/Dhaka', 'IN': 'Asia/Kolkata', 'PK': 'Asia/Karachi',
-        'US': 'America/New_York', 'GB': 'Europe/London', 'FR': 'Europe/Paris',
-        'DE': 'Europe/Berlin', 'JP': 'Asia/Tokyo', 'CN': 'Asia/Shanghai',
-        'AU': 'Australia/Sydney', 'CA': 'America/Toronto', 'BR': 'America/Sao_Paulo',
-        'RU': 'Europe/Moscow', 'AE': 'Asia/Dubai', 'SA': 'Asia/Riyadh'
-    }
-    return pytz.timezone('UTC')
+def get_timezone_from_country_code(country_code):
+    try:
+        country_code = country_code.lower().strip()
+        
+        special_timezones = {
+            "gb": "Europe/London",
+            "uk": "Europe/London",
+            "ae": "Asia/Dubai",
+            "us": "America/New_York",
+            "ca": "America/Toronto",
+            "au": "Australia/Sydney",
+            "nz": "Pacific/Auckland",
+            "jp": "Asia/Tokyo",
+            "cn": "Asia/Shanghai",
+            "in": "Asia/Kolkata",
+            "pk": "Asia/Karachi",
+            "bd": "Asia/Dhaka",
+            "ru": "Europe/Moscow",
+            "br": "America/Sao_Paulo",
+            "mx": "America/Mexico_City",
+            "ar": "America/Argentina/Buenos_Aires",
+            "za": "Africa/Johannesburg",
+            "eg": "Africa/Cairo",
+            "sa": "Asia/Riyadh",
+            "tr": "Europe/Istanbul",
+            "de": "Europe/Berlin",
+            "fr": "Europe/Paris",
+            "es": "Europe/Madrid",
+            "it": "Europe/Rome",
+            "nl": "Europe/Amsterdam",
+            "se": "Europe/Stockholm",
+            "no": "Europe/Oslo",
+            "dk": "Europe/Copenhagen",
+            "fi": "Europe/Helsinki",
+            "pl": "Europe/Warsaw",
+            "gr": "Europe/Athens",
+            "pt": "Europe/Lisbon",
+            "ie": "Europe/Dublin",
+            "ch": "Europe/Zurich",
+            "at": "Europe/Vienna",
+            "be": "Europe/Brussels",
+            "cz": "Europe/Prague",
+            "hu": "Europe/Budapest",
+            "ro": "Europe/Bucharest",
+            "bg": "Europe/Sofia",
+            "hr": "Europe/Zagreb",
+            "sk": "Europe/Bratislava",
+            "si": "Europe/Ljubljana",
+            "lt": "Europe/Vilnius",
+            "lv": "Europe/Riga",
+            "ee": "Europe/Tallinn",
+            "ua": "Europe/Kiev",
+            "by": "Europe/Minsk",
+            "kr": "Asia/Seoul",
+            "th": "Asia/Bangkok",
+            "vn": "Asia/Ho_Chi_Minh",
+            "id": "Asia/Jakarta",
+            "my": "Asia/Kuala_Lumpur",
+            "sg": "Asia/Singapore",
+            "ph": "Asia/Manila",
+            "hk": "Asia/Hong_Kong",
+            "tw": "Asia/Taipei",
+            "il": "Asia/Jerusalem",
+            "qa": "Asia/Qatar",
+            "kw": "Asia/Kuwait",
+            "om": "Asia/Muscat",
+            "bh": "Asia/Bahrain",
+            "jo": "Asia/Amman",
+            "lb": "Asia/Beirut",
+            "sy": "Asia/Damascus",
+            "iq": "Asia/Baghdad",
+            "ir": "Asia/Tehran",
+            "af": "Asia/Kabul",
+            "np": "Asia/Kathmandu",
+            "lk": "Asia/Colombo",
+            "mm": "Asia/Yangon",
+            "kh": "Asia/Phnom_Penh",
+            "la": "Asia/Vientiane",
+            "mn": "Asia/Ulaanbaatar",
+            "kz": "Asia/Almaty",
+            "uz": "Asia/Tashkent",
+            "tm": "Asia/Ashgabat",
+            "kg": "Asia/Bishkek",
+            "tj": "Asia/Dushanbe"
+        }
+        
+        if country_code in special_timezones:
+            return pytz.timezone(special_timezones[country_code])
+        
+        time_zones = pytz.country_timezones.get(country_code.upper())
+        if time_zones:
+            return pytz.timezone(time_zones[0])
+        
+        return pytz.timezone('UTC')
+    except Exception as e:
+        LOGGER.error(f"Timezone detection failed for {country_code}: {str(e)}")
+        return pytz.timezone('UTC')
 
 def get_country_name(country_code):
     try:
@@ -56,7 +144,7 @@ def create_weather_image(weather_data, output_path):
     current = weather_data["current"]
     
     try:
-        timezone = get_timezone_from_coordinates(weather_data["lat"], weather_data["lon"])
+        timezone = get_timezone_from_country_code(weather_data['country_code'])
         local_time = datetime.now(timezone)
         time_text = local_time.strftime("%I:%M %p")
     except Exception as e:
@@ -233,7 +321,7 @@ async def get_weather_data(city):
             aqi_level = "Poor"
         
         try:
-            timezone = get_timezone_from_coordinates(lat, lon)
+            timezone = get_timezone_from_country_code(country_code)
             local_time = datetime.now(timezone)
             current_time = local_time.strftime("%I:%M %p")
             current_date_str = local_time.strftime("%Y-%m-%d")
