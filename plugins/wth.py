@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from fastapi.responses import JSONResponse
 import aiohttp
 import asyncio
@@ -9,21 +9,41 @@ import pytz
 import pycountry
 import requests
 import tempfile
+import io
 from utils import LOGGER
 
 router = APIRouter(prefix="/wth")
 
-def get_timezone_from_coordinates(lat, lon):
-    from timezonefinder import TimezoneFinder
+FONT_CACHE = {}
+
+def download_font(url, size):
+    cache_key = f"{url}_{size}"
+    if cache_key in FONT_CACHE:
+        return FONT_CACHE[cache_key]
+    
     try:
-        tf = TimezoneFinder()
-        timezone_str = tf.timezone_at(lat=lat, lng=lon)
-        if timezone_str:
-            return pytz.timezone(timezone_str)
-        return pytz.timezone('UTC')
+        response = requests.get(url, timeout=15)
+        if response.status_code == 200:
+            font = ImageFont.truetype(io.BytesIO(response.content), size)
+            FONT_CACHE[cache_key] = font
+            LOGGER.info(f"Font cached successfully: {cache_key}")
+            return font
+        else:
+            LOGGER.error(f"Font download failed with status {response.status_code}")
     except Exception as e:
-        LOGGER.error(f"Timezone detection failed: {str(e)}")
-        return pytz.timezone('UTC')
+        LOGGER.error(f"Failed to download font from {url}: {str(e)}")
+    
+    return ImageFont.load_default()
+
+def get_timezone_from_coordinates(lat, lon):
+    timezone_mapping = {
+        'BD': 'Asia/Dhaka', 'IN': 'Asia/Kolkata', 'PK': 'Asia/Karachi',
+        'US': 'America/New_York', 'GB': 'Europe/London', 'FR': 'Europe/Paris',
+        'DE': 'Europe/Berlin', 'JP': 'Asia/Tokyo', 'CN': 'Asia/Shanghai',
+        'AU': 'Australia/Sydney', 'CA': 'America/Toronto', 'BR': 'America/Sao_Paulo',
+        'RU': 'Europe/Moscow', 'AE': 'Asia/Dubai', 'SA': 'Asia/Riyadh'
+    }
+    return pytz.timezone('UTC')
 
 def get_country_name(country_code):
     try:
@@ -33,10 +53,10 @@ def get_country_name(country_code):
         return country_code
 
 def create_weather_image(weather_data, output_path):
-    current = weather_data["current_weather"]
+    current = weather_data["current"]
     
     try:
-        timezone = get_timezone_from_coordinates(weather_data["coordinates"]["latitude"], weather_data["coordinates"]["longitude"])
+        timezone = get_timezone_from_coordinates(weather_data["lat"], weather_data["lon"])
         local_time = datetime.now(timezone)
         time_text = local_time.strftime("%I:%M %p")
     except Exception as e:
@@ -51,11 +71,15 @@ def create_weather_image(weather_data, output_path):
     img = Image.new("RGB", (img_width, img_height), color=background_color)
     draw = ImageDraw.Draw(img)
     
+    font_url_bold_large = "https://cdn.jsdelivr.net/npm/dejavu-fonts-ttf@2.37.3/ttf/DejaVuSans-Bold.ttf"
+    font_url_bold = "https://cdn.jsdelivr.net/npm/dejavu-fonts-ttf@2.37.3/ttf/DejaVuSans-Bold.ttf"
+    font_url_regular = "https://cdn.jsdelivr.net/npm/dejavu-fonts-ttf@2.37.3/ttf/DejaVuSans.ttf"
+    
     try:
-        font_bold_large = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 120)
-        font_bold = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf", 40)
-        font_regular = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 38)
-        font_small = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", 36)
+        font_bold_large = download_font(font_url_bold_large, 120)
+        font_bold = download_font(font_url_bold, 40)
+        font_regular = download_font(font_url_regular, 38)
+        font_small = download_font(font_url_regular, 36)
     except Exception:
         font_bold_large = ImageFont.load_default()
         font_bold = ImageFont.load_default()
@@ -64,10 +88,10 @@ def create_weather_image(weather_data, output_path):
     
     main_title = "Current Weather"
     temp_text = f"{current['temperature']}°C"
-    condition_text = current["condition"]
+    condition_text = current["weather"]
     realfeel_text = f"RealFeel® {current['feels_like']}°C"
-    country_name = get_country_name(weather_data['location']['country_code'])
-    location_text = f"{weather_data['location']['city']}, {country_name}"
+    country_name = get_country_name(weather_data['country_code'])
+    location_text = f"{weather_data['city']}, {country_name}"
     
     draw.text((1140, 30), time_text, font=font_regular, fill=light_gray, anchor="ra")
     draw.text((40, 40), main_title, font=font_bold, fill=white)
@@ -179,9 +203,9 @@ async def get_weather_data(city):
             hourly_forecast.append({
                 "time": time_format,
                 "temperature": round(hourly["temperature_2m"][i], 1),
-                "condition": weather_code.get(hourly["weathercode"][i], "Unknown"),
+                "weather": weather_code.get(hourly["weathercode"][i], "Unknown"),
                 "humidity": hourly["relative_humidity_2m"][i],
-                "precipitation_chance": hourly["precipitation_probability"][i]
+                "precipitation_probability": hourly["precipitation_probability"][i]
             })
         
         current_date = datetime.now()
@@ -190,16 +214,12 @@ async def get_weather_data(city):
             day_date = (current_date + timedelta(days=i))
             daily_forecast.append({
                 "date": day_date.strftime('%Y-%m-%d'),
-                "day_name": day_date.strftime('%a, %b %d'),
-                "temperature": {
-                    "min": round(daily["temperature_2m_min"][i], 1),
-                    "max": round(daily["temperature_2m_max"][i], 1)
-                },
-                "condition": weather_code.get(daily["weathercode"][i], "Unknown"),
-                "sun": {
-                    "sunrise": daily["sunrise"][i].split("T")[1][:5],
-                    "sunset": daily["sunset"][i].split("T")[1][:5]
-                }
+                "day": day_date.strftime('%a, %b %d'),
+                "min_temp": round(daily["temperature_2m_min"][i], 1),
+                "max_temp": round(daily["temperature_2m_max"][i], 1),
+                "weather": weather_code.get(daily["weathercode"][i], "Unknown"),
+                "sunrise": daily["sunrise"][i].split("T")[1][:5],
+                "sunset": daily["sunset"][i].split("T")[1][:5]
             })
         
         pm25 = aqi["pm2_5"][0]
@@ -228,69 +248,65 @@ async def get_weather_data(city):
             "location": {
                 "city": city.capitalize(),
                 "country": get_country_name(country_code),
-                "country_code": country_code
-            },
-            "coordinates": {
-                "latitude": lat,
-                "longitude": lon
-            },
-            "current_weather": {
-                "timestamp": {
-                    "time": current_time,
-                    "date": current_date_str
-                },
-                "temperature": round(current["temperature_2m"], 1),
-                "feels_like": round(current["apparent_temperature"], 1),
-                "condition": weather_code.get(current["weathercode"], "Unknown"),
-                "condition_code": current["weathercode"],
-                "humidity": current["relative_humidity_2m"],
-                "wind": {
-                    "speed": round(current["wind_speed_10m"], 1),
-                    "direction": current["wind_direction_10m"]
-                },
-                "sun": {
-                    "sunrise": daily["sunrise"][0].split("T")[1][:5],
-                    "sunset": daily["sunset"][0].split("T")[1][:5]
+                "country_code": country_code,
+                "coordinates": {
+                    "latitude": lat,
+                    "longitude": lon
                 }
             },
-            "forecast": {
-                "hourly": hourly_forecast,
-                "daily": daily_forecast
+            "current": {
+                "time": current_time,
+                "date": current_date_str,
+                "temperature": round(current["temperature_2m"], 1),
+                "feels_like": round(current["apparent_temperature"], 1),
+                "humidity": current["relative_humidity_2m"],
+                "wind_speed": round(current["wind_speed_10m"], 1),
+                "wind_direction": current["wind_direction_10m"],
+                "weather": weather_code.get(current["weathercode"], "Unknown"),
+                "weather_code": current["weathercode"],
+                "sunrise": daily["sunrise"][0].split("T")[1][:5],
+                "sunset": daily["sunset"][0].split("T")[1][:5]
             },
+            "hourly_forecast": hourly_forecast,
+            "daily_forecast": daily_forecast,
             "air_quality": {
                 "level": aqi_level,
-                "fine_particles": round(aqi["pm2_5"][0], 2),
-                "coarse_particles": round(aqi["pm10"][0], 2),
+                "pm2_5": round(aqi["pm2_5"][0], 2),
+                "pm10": round(aqi["pm10"][0], 2),
                 "carbon_monoxide": round(aqi["carbon_monoxide"][0], 2),
                 "nitrogen_dioxide": round(aqi["nitrogen_dioxide"][0], 2),
                 "ozone": round(aqi["ozone"][0], 2)
             },
-            "weather_maps": {
+            "maps": {
                 "temperature": f"https://openweathermap.org/weathermap?basemap=map&cities=true&layer=temperature&lat={lat}&lon={lon}&zoom=8",
                 "clouds": f"https://openweathermap.org/weathermap?basemap=map&cities=true&layer=clouds&lat={lat}&lon={lon}&zoom=8",
                 "precipitation": f"https://openweathermap.org/weathermap?basemap=map&cities=true&layer=precipitation&lat={lat}&lon={lon}&zoom=8",
                 "wind": f"https://openweathermap.org/weathermap?basemap=map&cities=true&layer=wind&lat={lat}&lon={lon}&zoom=8",
                 "pressure": f"https://openweathermap.org/weathermap?basemap=map&cities=true&layer=pressure&lat={lat}&lon={lon}&zoom=8"
-            }
+            },
+            "lat": lat,
+            "lon": lon,
+            "country_code": country_code,
+            "city": city.capitalize()
         }
 
 @router.get("")
 async def get_weather(area: str = None):
+    area = area.strip() if area else ""
+    
+    LOGGER.info(f"Received weather request for area: {area}")
+    
+    if not area:
+        LOGGER.warning("Missing area parameter in request")
+        return JSONResponse(
+            status_code=400,
+            content={
+                "status": "error",
+                "message": "Missing 'area' parameter. Usage: /wth?area=London"
+            }
+        )
+    
     try:
-        if not area:
-            LOGGER.warning("Missing area parameter in request")
-            return JSONResponse(
-                status_code=400,
-                content={
-                    "status": "error",
-                    "message": "Missing 'area' parameter. Usage: /wth?area=London",
-                    "api_owner": "@ISmartCoder",
-                    "api_dev": "@abirxdhackz"
-                }
-            )
-        
-        LOGGER.info(f"Received weather request for area: {area}")
-        
         weather_data = await get_weather_data(area)
         
         if not weather_data:
@@ -299,9 +315,7 @@ async def get_weather(area: str = None):
                 status_code=404,
                 content={
                     "status": "error",
-                    "message": f"Weather data unavailable for '{area}'. Please check the city name.",
-                    "api_owner": "@ISmartCoder",
-                    "api_dev": "@abirxdhackz"
+                    "message": f"Weather data unavailable for '{area}'. Please check the city name."
                 }
             )
         
@@ -322,43 +336,21 @@ async def get_weather(area: str = None):
             LOGGER.error(f"Failed to remove image: {str(e)}")
         
         if image_url:
-            weather_data["weather_image"] = {
-                "url": image_url,
-                "status": "available"
-            }
+            weather_data["image_url"] = image_url
         else:
-            weather_data["weather_image"] = {
-                "url": None,
-                "status": "unavailable",
-                "error": "Failed to upload image to hosting service"
-            }
-        
-        weather_data["api_owner"] = "@ISmartCoder"
-        weather_data["api_dev"] = "@abirxdhackz"
+            weather_data["image_url"] = None
+            weather_data["image_error"] = "Failed to upload image to hosting service"
         
         LOGGER.info(f"Successfully processed weather request for {area}")
         return JSONResponse(content=weather_data)
         
-    except ValueError as e:
-        LOGGER.error(f"Invalid input for weather lookup: {str(e)}")
-        return JSONResponse(
-            status_code=400,
-            content={
-                "status": "error",
-                "message": str(e),
-                "api_owner": "@ISmartCoder",
-                "api_dev": "@abirxdhackz"
-            }
-        )
     except Exception as e:
-        LOGGER.error(f"Error processing weather request: {str(e)}")
+        LOGGER.error(f"API error for {area}: {str(e)}", exc_info=True)
         return JSONResponse(
             status_code=500,
             content={
                 "status": "error",
                 "message": "Internal server error. Please try again later.",
-                "error_details": str(e),
-                "api_owner": "@ISmartCoder",
-                "api_dev": "@abirxdhackz"
+                "error": str(e)
             }
         )
