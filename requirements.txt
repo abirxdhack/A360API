@@ -9,6 +9,8 @@ pytz
 smartfaker
 brotli
 zstandard
+aiofiles
+lxml
 smartbindb
 googletrans
 beautifulsoup4

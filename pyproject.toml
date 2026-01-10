@@ -20,6 +20,8 @@ dependencies = [
     "cloudscraper",
 
     "pytz",
+    "aiofiles",
+    "lxml",
     "python-dateutil",
     "pycountry",
 
