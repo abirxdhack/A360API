@@ -15,6 +15,7 @@ smartbindb
 googletrans
 beautifulsoup4
 cloudscraper
+gtts
 pillow
 requests
 aiohttp<3.13
