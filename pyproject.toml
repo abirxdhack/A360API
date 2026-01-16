@@ -21,6 +21,7 @@ dependencies = [
 
     "pytz",
     "aiofiles",
+    "gtts",
     "lxml",
     "python-dateutil",
     "pycountry",
